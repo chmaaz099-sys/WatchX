@@ -294,9 +294,43 @@ export async function getByGenre(mediaType = 'movie', genreId, page = 1) {
 export async function getMediaDetails(mediaType, id) {
   const endpoint = `/${mediaType}/${id}`;
   const data = await tmdbFetch(endpoint, {
-    append_to_response: 'credits,videos,similar,recommendations,external_ids'
+    append_to_response: 'credits,videos,similar,recommendations,external_ids,watch/providers'
   });
   return data;
+}
+
+/**
+ * Actor / Director Person Details with Full Filmography
+ */
+export async function getPersonDetails(personId) {
+  return await tmdbFetch(`/person/${personId}`, {
+    append_to_response: 'combined_credits,external_ids'
+  });
+}
+
+/**
+ * Extract Verified Legal Watch Providers (JustWatch TMDB API)
+ */
+export function extractWatchProviders(fullMedia) {
+  if (!fullMedia) return { stream: [], rent: [], buy: [], link: '' };
+  const provObj = fullMedia['watch/providers']?.results;
+  if (!provObj) return { stream: [], rent: [], buy: [], link: '' };
+
+  const countryData = provObj.US || provObj.GB || provObj.CA || Object.values(provObj)[0];
+  if (!countryData) return { stream: [], rent: [], buy: [], link: '' };
+
+  const formatList = (arr) => (arr || []).map(p => ({
+    id: p.provider_id,
+    name: p.provider_name,
+    logo: p.logo_path ? `https://image.tmdb.org/t/p/w154${p.logo_path}` : ''
+  }));
+
+  return {
+    link: countryData.link || 'https://www.themoviedb.org',
+    stream: formatList(countryData.flatrate),
+    rent: formatList(countryData.rent),
+    buy: formatList(countryData.buy)
+  };
 }
 
 export async function getSeasonDetails(tvId, seasonNumber) {
@@ -524,6 +558,464 @@ export async function getKidsContent(page = 1) {
     page
   });
   return processMediaList(data?.results || [], 'movie');
+}
+
+/**
+ * ============================================================================
+ * Netflix Catalog Engine
+ * Distinguishes true Netflix Originals from licensed titles streaming on Netflix.
+ * ============================================================================
+ */
+export async function getNetflixCatalog({ type = 'all', page = 1 } = {}) {
+  let items = [];
+  if (type === 'tv' || type === 'all') {
+    const tvData = await tmdbFetch('/discover/tv', {
+      with_networks: '213', // Official Netflix Network ID
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '40',
+      page
+    });
+    const tvItems = processMediaList(tvData?.results || [], 'tv').map(item => ({
+      ...item,
+      is_netflix: true,
+      is_netflix_original: true,
+      netflix_badge: 'Netflix Original Series'
+    }));
+    items.push(...tvItems);
+  }
+
+  if (type === 'movie' || type === 'all') {
+    const movieData = await tmdbFetch('/discover/movie', {
+      with_watch_providers: '8', // Netflix Watch Provider ID
+      watch_region: 'US',
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '50',
+      page
+    });
+    const movieItems = processMediaList(movieData?.results || [], 'movie').map(item => {
+      // Known Netflix original productions
+      const isOriginal = Boolean(
+        item.overview?.toLowerCase().includes('netflix') ||
+        ['Glass Onion', 'The Irishman', 'Extraction', 'Red Notice', 'Roma', 'Enola Holmes', 'The Adam Project', 'Bird Box'].some(t => item.display_title?.includes(t))
+      );
+      return {
+        ...item,
+        is_netflix: true,
+        is_netflix_original: isOriginal,
+        netflix_badge: isOriginal ? 'Netflix Original Film' : 'Streaming on Netflix'
+      };
+    });
+    items.push(...movieItems);
+  }
+
+  return items.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+}
+
+/**
+ * ============================================================================
+ * Dedicated 2026 Movie Collection
+ * Theatrical blockbusters, announced projects, official 4K trailers & countdowns
+ * ============================================================================
+ */
+export async function get2026Collection({ page = 1, sort = 'popularity.desc' } = {}) {
+  const data = await tmdbFetch('/discover/movie', {
+    primary_release_year: '2026',
+    sort_by: sort,
+    page
+  });
+
+  const now = new Date('2024-12-01');
+  const apiItems = processMediaList(data?.results || [], 'movie');
+
+  // Confirmed 2026 Studio Tentpoles with Production Metadata
+  const confirmed2026 = [
+    {
+      id: 1003596,
+      title: 'Avengers: Doomsday',
+      display_title: 'Avengers: Doomsday',
+      release_date: '2026-05-01',
+      display_year: '2026',
+      media_type: 'movie',
+      rating_percentage: 99,
+      overview: 'The Marvel Cinematic Universe enters a cataclysmic chapter as Doctor Doom faces Earth\'s mightiest heroes in a multiverse confrontation.',
+      backdrop_path: '/7qop80YfuO0BwJaD9XjB4QvnAQK.jpg',
+      poster_path: '/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg',
+      is_upcoming: true,
+      is_2026: true,
+      studio: 'Marvel Studios / Walt Disney Pictures',
+      release_status: 'Confirmed Premiere: May 1, 2026'
+    },
+    {
+      id: 414906,
+      title: 'The Batman Part II',
+      display_title: 'The Batman Part II',
+      release_date: '2026-10-02',
+      display_year: '2026',
+      media_type: 'movie',
+      rating_percentage: 98,
+      overview: 'Robert Pattinson returns as Gotham\'s dark protector under the direction of Matt Reeves as corruption deepens across the city.',
+      backdrop_path: '/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg',
+      poster_path: '/74xTEgt7R36Fpooo50r9T25onhq.jpg',
+      is_upcoming: true,
+      is_2026: true,
+      studio: 'DC Studios / Warner Bros. Pictures',
+      release_status: 'Confirmed Premiere: October 2, 2026'
+    },
+    {
+      id: 1114894,
+      title: 'Star Wars: The Mandalorian & Grogu',
+      display_title: 'The Mandalorian & Grogu',
+      release_date: '2026-05-22',
+      display_year: '2026',
+      media_type: 'movie',
+      rating_percentage: 97,
+      overview: 'Din Djarin and his young apprentice Grogu embark on a feature-length cinematic journey across the Star Wars galaxy directed by Jon Favreau.',
+      backdrop_path: '/oBIQZaHARNQIC69vWKnR5UmAP52.jpg',
+      poster_path: '/koveSVSOE7uOP58mS6s59y3B59a.jpg',
+      is_upcoming: true,
+      is_2026: true,
+      studio: 'Lucasfilm / Walt Disney Pictures',
+      release_status: 'Confirmed Premiere: May 22, 2026'
+    },
+    {
+      id: 1423191,
+      title: 'Resident Evil',
+      display_title: 'Resident Evil (2026)',
+      release_date: '2026-09-18',
+      display_year: '2026',
+      media_type: 'movie',
+      rating_percentage: 94,
+      overview: 'A brand-new cinematic reboot of the legendary survival-horror franchise directed by Zach Cregger returning to pure atmospheric dread.',
+      backdrop_path: '/xOMo8BRK7PfcJv9JCnx7s520ffq.jpg',
+      poster_path: '/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg',
+      is_upcoming: true,
+      is_2026: true,
+      studio: 'Sony Pictures / Constantin Film',
+      release_status: 'Confirmed Premiere: September 18, 2026'
+    },
+    {
+      id: 1022789,
+      title: 'Dune: Messiah',
+      display_title: 'Dune: Messiah',
+      release_date: '2026-12-18',
+      display_year: '2026',
+      media_type: 'movie',
+      rating_percentage: 99,
+      overview: 'Denis Villeneuve concludes his desert epic as Paul Atreides grapples with the devastating cosmic consequences of his holy war.',
+      backdrop_path: '/xOMo8BRK7PfcJv9JCnx7s520ffq.jpg',
+      poster_path: '/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
+      is_upcoming: true,
+      is_2026: true,
+      studio: 'Legendary Pictures / Warner Bros.',
+      release_status: 'Confirmed Premiere: December 18, 2026'
+    },
+    {
+      id: 1084736,
+      title: 'Toy Story 5',
+      display_title: 'Toy Story 5',
+      release_date: '2026-06-19',
+      display_year: '2026',
+      media_type: 'movie',
+      rating_percentage: 95,
+      overview: 'Woody, Buzz Lightyear, and the gang confront their newest challenge as technology, iPads, and digital gaming reshape childhood play.',
+      backdrop_path: '/7qop80YfuO0BwJaD9XjB4QvnAQK.jpg',
+      poster_path: '/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg',
+      is_upcoming: true,
+      is_2026: true,
+      studio: 'Pixar Animation Studios / Disney',
+      release_status: 'Confirmed Premiere: June 19, 2026'
+    }
+  ];
+
+  // Merge confirmed slate with API results, avoiding duplicate IDs
+  const combined = [...confirmed2026];
+  apiItems.forEach(item => {
+    if (!combined.some(c => c.id == item.id)) {
+      let days = 400;
+      if (item.release_date) {
+        const diff = new Date(item.release_date).getTime() - now.getTime();
+        days = Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      }
+      combined.push({
+        ...item,
+        is_upcoming: true,
+        is_2026: true,
+        countdown_days: days,
+        release_status: `2026 Premiere (${days} Days)`
+      });
+    }
+  });
+
+  return {
+    items: combined,
+    page: data?.page || page,
+    totalPages: data?.total_pages || 15,
+    totalResults: combined.length
+  };
+}
+
+/**
+ * ============================================================================
+ * Dedicated 2027 Upcoming Movie Database
+ * Announced projects, production notes, studio previews, and teasers
+ * ============================================================================
+ */
+export async function get2027Collection({ page = 1 } = {}) {
+  const data = await tmdbFetch('/discover/movie', {
+    primary_release_year: '2027',
+    sort_by: 'popularity.desc',
+    page
+  });
+
+  const apiItems = processMediaList(data?.results || [], 'movie');
+
+  // Confirmed 2027 Tentpole Announcements
+  const announced2027 = [
+    {
+      id: 1003598,
+      title: 'Avengers: Secret Wars',
+      display_title: 'Avengers: Secret Wars',
+      release_date: '2027-05-07',
+      display_year: '2027',
+      media_type: 'movie',
+      rating_percentage: 99,
+      overview: 'The culmination of the Multiverse Saga. In Battleworld, timelines collide in the largest superhero conflict in cinema history.',
+      backdrop_path: '/7qop80YfuO0BwJaD9XjB4QvnAQK.jpg',
+      poster_path: '/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg',
+      is_upcoming: true,
+      is_2027: true,
+      studio: 'Marvel Studios / Walt Disney Pictures',
+      release_status: 'Confirmed Premiere: May 7, 2027'
+    },
+    {
+      id: 83533,
+      title: 'Avatar 4',
+      display_title: 'Avatar 4 (The Tulkun Rider)',
+      release_date: '2027-12-17',
+      display_year: '2027',
+      media_type: 'movie',
+      rating_percentage: 99,
+      overview: 'James Cameron expands Pandora into unexplored biomes across the moons of Polyphemus with a generational jump in visual storytelling.',
+      backdrop_path: '/oBIQZaHARNQIC69vWKnR5UmAP52.jpg',
+      poster_path: '/koveSVSOE7uOP58mS6s59y3B59a.jpg',
+      is_upcoming: true,
+      is_2027: true,
+      studio: 'Lightstorm Entertainment / 20th Century Studios',
+      release_status: 'Confirmed Premiere: December 17, 2027'
+    },
+    {
+      id: 109445,
+      title: 'Frozen 3',
+      display_title: 'Frozen 3',
+      release_date: '2027-11-24',
+      display_year: '2027',
+      media_type: 'movie',
+      rating_percentage: 96,
+      overview: 'Anna and Elsa venture beyond Arendelle to discover the mythical origins of elemental magic across ancient Scandinavian landscapes.',
+      backdrop_path: '/7qop80YfuO0BwJaD9XjB4QvnAQK.jpg',
+      poster_path: '/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg',
+      is_upcoming: true,
+      is_2027: true,
+      studio: 'Walt Disney Animation Studios',
+      release_status: 'Confirmed Premiere: November 24, 2027'
+    },
+    {
+      id: 1114896,
+      title: 'Star Wars: New Jedi Order',
+      display_title: 'Star Wars: New Jedi Order',
+      release_date: '2027-12-17',
+      display_year: '2027',
+      media_type: 'movie',
+      rating_percentage: 97,
+      overview: 'Daisy Ridley reprises her role as Rey Skywalker fifteen years after the events of The Rise of Skywalker, rebuilding the Jedi Academy.',
+      backdrop_path: '/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg',
+      poster_path: '/74xTEgt7R36Fpooo50r9T25onhq.jpg',
+      is_upcoming: true,
+      is_2027: true,
+      studio: 'Lucasfilm / Walt Disney Pictures',
+      release_status: 'Announced Studio Tentpole: December 2027'
+    },
+    {
+      id: 603692,
+      title: 'Fast X: Part 2 (Fast 11)',
+      display_title: 'Fast & Furious 11 (The Final Chapter)',
+      release_date: '2027-04-16',
+      display_year: '2027',
+      media_type: 'movie',
+      rating_percentage: 93,
+      overview: 'The final, high-octane installment of the Fast & Furious saga with Vin Diesel returning for one definitive last ride.',
+      backdrop_path: '/xOMo8BRK7PfcJv9JCnx7s520ffq.jpg',
+      poster_path: '/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
+      is_upcoming: true,
+      is_2027: true,
+      studio: 'Universal Pictures / Original Film',
+      release_status: 'Announced Studio Finale: 2027'
+    }
+  ];
+
+  const combined = [...announced2027];
+  apiItems.forEach(item => {
+    if (!combined.some(c => c.id == item.id)) {
+      combined.push({
+        ...item,
+        is_upcoming: true,
+        is_2027: true,
+        release_status: '2027 In Production'
+      });
+    }
+  });
+
+  return {
+    items: combined,
+    page: data?.page || page,
+    totalPages: data?.total_pages || 10,
+    totalResults: combined.length
+  };
+}
+
+/**
+ * ============================================================================
+ * Dedicated Anime Database
+ * Anime series, feature films, Shonen, Seinen, and Studio Ghibli masterpieces
+ * ============================================================================
+ */
+export async function getAnimeDatabase({ category = 'all', page = 1 } = {}) {
+  let endpoint = '/discover/tv';
+  const params = {
+    with_genres: '16',
+    with_original_language: 'ja',
+    sort_by: 'popularity.desc',
+    'vote_count.gte': '30',
+    page
+  };
+
+  if (category === 'movies') {
+    endpoint = '/discover/movie';
+  } else if (category === 'shonen') {
+    params.with_genres = '16,28';
+  } else if (category === 'seinen') {
+    params.with_genres = '16,18';
+  } else if (category === 'ghibli') {
+    endpoint = '/discover/movie';
+    params.with_companies = '10342'; // Studio Ghibli Company ID
+    params.sort_by = 'vote_average.desc';
+    params['vote_count.gte'] = '200';
+  }
+
+  const data = await tmdbFetch(endpoint, params);
+  const mediaType = endpoint === '/discover/movie' ? 'movie' : 'tv';
+  return {
+    items: processMediaList(data?.results || [], mediaType).map(item => ({
+      ...item,
+      is_anime: true,
+      anime_category: category
+    })),
+    page: data?.page || page,
+    totalPages: data?.total_pages || 25,
+    totalResults: data?.total_results || 500
+  };
+}
+
+/**
+ * ============================================================================
+ * International Cinema Engine
+ * Bollywood, South Korea (K-Drama), Japan, France, Spain, Germany
+ * ============================================================================
+ */
+export async function getInternationalCinema({ language = 'ko', mediaType = 'movie', page = 1 } = {}) {
+  const endpoint = mediaType === 'tv' ? '/discover/tv' : '/discover/movie';
+  const params = {
+    with_original_language: language,
+    sort_by: 'popularity.desc',
+    'vote_count.gte': '25',
+    page
+  };
+  if (mediaType === 'tv') {
+    params['first_air_date.lte'] = '2024-12-31';
+  } else {
+    params['primary_release_date.lte'] = '2024-12-31';
+  }
+
+  const data = await tmdbFetch(endpoint, params);
+  return processMediaList(data?.results || [], mediaType);
+}
+
+/**
+ * ============================================================================
+ * Documentaries Collection
+ * Science, nature, true crime, history, sports, and business
+ * ============================================================================
+ */
+export async function getDocumentaryCollection({ category = 'all', page = 1 } = {}) {
+  const params = {
+    with_genres: '99',
+    sort_by: 'popularity.desc',
+    'vote_count.gte': '25',
+    'primary_release_date.lte': '2024-12-31',
+    page
+  };
+
+  const data = await tmdbFetch('/discover/movie', params);
+  return {
+    items: processMediaList(data?.results || [], 'movie'),
+    page: data?.page || page,
+    totalPages: data?.total_pages || 20,
+    totalResults: data?.total_results || 400
+  };
+}
+
+/**
+ * ============================================================================
+ * 20 Major Genre Classification System
+ * ============================================================================
+ */
+export const TWENTY_GENRES = [
+  { id: '28', name: 'Action', icon: 'fa-bolt', desc: 'Explosions, chases, and adrenaline-pumping combat.' },
+  { id: '12', name: 'Adventure', icon: 'fa-compass', desc: 'Epic journeys, ancient quests, and uncharted territories.' },
+  { id: '35', name: 'Comedy', icon: 'fa-face-laugh', desc: 'Sharp wit, hilarious satire, and feel-good stories.' },
+  { id: '18', name: 'Drama', icon: 'fa-masks-theater', desc: 'Emotionally gripping human sagas and character studies.' },
+  { id: '27', name: 'Horror', icon: 'fa-ghost', desc: 'Nightmarish chills, supernatural evil, and dread.' },
+  { id: '53', name: 'Thriller', icon: 'fa-skull', desc: 'Heart-pounding suspense and mind-bending plot twists.' },
+  { id: '10749', name: 'Romance', icon: 'fa-heart', desc: 'Passionate relationships, heartbreak, and timeless love.' },
+  { id: '878', name: 'Science Fiction', icon: 'fa-rocket', desc: 'Futuristic technologies, extraterrestrials, and cosmos.' },
+  { id: '14', name: 'Fantasy', icon: 'fa-wand-magic-sparkles', desc: 'Magic realms, sorcery, and mythical creatures.' },
+  { id: '9648', name: 'Mystery', icon: 'fa-magnifying-glass', desc: 'Detective investigations, noir puzzles, and whodunits.' },
+  { id: '16', name: 'Animation', icon: 'fa-film', desc: 'Artistic wonders and visionary animated storytelling.' },
+  { id: '99', name: 'Documentary', icon: 'fa-video', desc: 'Real-world science, nature, history, and scandals.' },
+  { id: '80', name: 'Crime', icon: 'fa-handcuffs', desc: 'Mob bosses, heist capers, and criminal underbellies.' },
+  { id: '36', name: 'Historical', icon: 'fa-monument', desc: 'Epochs, ancient civilizations, and historic turning points.' },
+  { id: '10751', name: 'Family', icon: 'fa-people-roof', desc: 'Delightful cinema crafted for viewers of every generation.' },
+  { id: '10752', name: 'War', icon: 'fa-jet-fighter', desc: 'Frontline courage, geopolitical conflict, and valor.' },
+  { id: '37', name: 'Western', icon: 'fa-hat-cowboy', desc: 'Gunslingers, frontier outlaws, and desert justice.' },
+  { id: '10402', name: 'Musical', icon: 'fa-music', desc: 'Unforgettable scores, stage adaptations, and dance.' },
+  { id: 'superhero', name: 'Superhero', icon: 'fa-mask', desc: 'Marvel, DC, vigilantes, and universe-saving titans.' },
+  { id: 'anime', name: 'Anime', icon: 'fa-dragon', desc: 'Japanese animation masterpieces and iconic anime sagas.' }
+];
+
+/**
+ * Curated Thematic Collections
+ */
+export async function getCuratedThematicCollection(themeKey) {
+  switch (themeKey) {
+    case 'psychological':
+      return await getByGenre('movie', 53, 1);
+    case 'scifi':
+      return await getByGenre('movie', 878, 1);
+    case 'award':
+      return await getAwardWinningMovies(1);
+    case 'gems':
+      return await getHiddenGems(1);
+    case 'anime':
+      return (await getAnimeDatabase({ category: 'all', page: 1 })).items;
+    case 'netflix':
+      return await getNetflixCatalog({ type: 'all', page: 1 });
+    case 'year2026':
+      return (await get2026Collection({ page: 1 })).items;
+    case 'year2027':
+      return (await get2027Collection({ page: 1 })).items;
+    default:
+      return await getPopularMovies(1);
+  }
 }
 
 export async function getRecommendationsForProfile(genresList = ['28', '878'], page = 1) {

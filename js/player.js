@@ -5,9 +5,9 @@
  * Precision profile-specific playback tracking with automatic resume.
  */
 
-import { dbClient } from './supabase-client.js?v=27';
-import { authManager } from './auth.js?v=27';
-import { getMediaDetails } from './api.js?v=27';
+import { dbClient } from './supabase-client.js?v=28';
+import { authManager } from './auth.js?v=28';
+import { getMediaDetails } from './api.js?v=28';
 
 // Clean, Secure, and High-Performance Streaming Sources (Zero popups / zero redirect abuse)
 // 100% Verified HTTP 200 Fast Global CDN Endpoints

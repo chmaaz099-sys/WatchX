@@ -10,10 +10,10 @@
  * - Clutter-Free Cinema Player (Zero technical badges or provider spam)
  */
 
-import * as api from './api.js?v=27';
-import { player } from './player.js?v=27';
-import { dbClient } from './supabase-client.js?v=27';
-import { authManager } from './auth.js?v=27';
+import * as api from './api.js?v=28';
+import { player } from './player.js?v=28';
+import { dbClient } from './supabase-client.js?v=28';
+import { authManager } from './auth.js?v=28';
 
 // Global App State
 const state = {
@@ -322,7 +322,8 @@ function switchTab(tabName) {
   const panes = [
     'home-view', 'catalog-view', 'latest-view', 'comingsoon-view',
     'discover-view', 'categories-view', 'mylist-view', 'search-view',
-    'settings-view', 'admin-view', 'help-view'
+    'settings-view', 'admin-view', 'help-view',
+    'anime-view', 'year2026-view', 'year2027-view', 'collections-view'
   ];
   panes.forEach(id => {
     const el = document.getElementById(id);
@@ -349,6 +350,22 @@ function switchTab(tabName) {
       document.getElementById('catalog-main-title').textContent = 'TV Series & Shows';
       resetCatalogFilters();
       loadCatalog();
+      break;
+    case 'anime':
+      document.getElementById('anime-view').style.display = 'block';
+      loadAnimeView();
+      break;
+    case 'year2026':
+      document.getElementById('year2026-view').style.display = 'block';
+      load2026View();
+      break;
+    case 'year2027':
+      document.getElementById('year2027-view').style.display = 'block';
+      load2027View();
+      break;
+    case 'collections':
+      document.getElementById('collections-view').style.display = 'block';
+      loadCollectionsView();
       break;
     case 'latest':
       document.getElementById('latest-view').style.display = 'block';
@@ -510,13 +527,61 @@ async function loadHomeContent() {
     // 4. Trending Now
     appendContentRow(container, 'Trending Worldwide', trending);
 
-    // 5. Netflix-Style Top 10 TV Series
+    // 5. Netflix Originals Showcase
+    try {
+      const netflixItems = await api.getNetflixCatalog({ type: 'all', page: 1 });
+      if (netflixItems && netflixItems.length > 0) {
+        appendContentRow(container, 'Netflix Originals & Exclusives', netflixItems);
+      }
+    } catch (e) {}
+
+    // 6. 2026 Theatrical Blockbusters
+    try {
+      const y2026 = await api.get2026Collection({ page: 1 });
+      if (y2026?.items && y2026.items.length > 0) {
+        appendContentRow(container, '2026 Theatrical Blockbusters & Premieres', y2026.items);
+      }
+    } catch (e) {}
+
+    // 7. 2027 Future Tentpoles Preview
+    try {
+      const y2027 = await api.get2027Collection({ page: 1 });
+      if (y2027?.items && y2027.items.length > 0) {
+        appendContentRow(container, '2027 Announced Future Blockbusters', y2027.items);
+      }
+    } catch (e) {}
+
+    // 8. Netflix-Style Top 10 TV Series
     try {
       const top10TV = await api.getTop10TV();
       appendTop10Row(container, 'Top 10 TV Shows on WatchX Today', top10TV);
     } catch (e) {}
 
-    // 6. Award-Winning Masterpieces
+    // 9. Bollywood & Indian Cinema Hits
+    try {
+      const bollywood = await api.getInternationalCinema({ language: 'hi', page: 1 });
+      if (bollywood && bollywood.length > 0) {
+        appendContentRow(container, 'Bollywood & Indian Cinema Blockbusters', bollywood);
+      }
+    } catch (e) {}
+
+    // 10. Korean Cinema & K-Drama Spotlight
+    try {
+      const kdrama = await api.getInternationalCinema({ language: 'ko', page: 1 });
+      if (kdrama && kdrama.length > 0) {
+        appendContentRow(container, 'South Korean Cinema & K-Drama Spotlight', kdrama);
+      }
+    } catch (e) {}
+
+    // 11. 4K Ultra HD Master Collection
+    try {
+      const fourK = await api.get4KCuratedMovies(1);
+      if (fourK && fourK.length > 0) {
+        appendContentRow(container, '4K Ultra HD & Dolby Master Collection', fourK);
+      }
+    } catch (e) {}
+
+    // 12. Award-Winning Masterpieces
     try {
       const awardWinning = await api.getAwardWinningMovies();
       appendContentRow(container, 'Award-Winning Cinema & Masterpieces', awardWinning);
@@ -1024,42 +1089,247 @@ if (loadMoreBtn) {
 // ==========================================================================
 // Categories View
 // ==========================================================================
-const GENRE_CARDS = [
-  { id: 28, name: 'Action', desc: 'Explosive, high-energy blockbusters' },
-  { id: 878, name: 'Science Fiction', desc: 'Futuristic worlds, technology & space' },
-  { id: 27, name: 'Horror', desc: 'Psychological thrills and chilling horror' },
-  { id: 35, name: 'Comedy', desc: 'Laugh-out-loud comedy & feel-good cinema' },
-  { id: 18, name: 'Drama', desc: 'Emotionally gripping narratives & classics' },
-  { id: 16, name: 'Animation & Anime', desc: 'Stunning animated features & series' },
-  { id: 99, name: 'Documentary', desc: 'Real stories, true events & nature' },
-  { id: 9648, name: 'Mystery & Crime', desc: 'Detective cases, puzzles & suspense' },
-  { id: 10749, name: 'Romance', desc: 'Heartfelt romance & passionate dramas' },
-  { id: 14, name: 'Fantasy', desc: 'Magic, mythical lands & epic quests' }
-];
-
+// ==========================================================================
+// 20 Major Categories & Genres Engine
+// ==========================================================================
 function loadCategoriesView() {
-  const grid = document.getElementById('categories-grid');
-  if (!grid) return;
+  const hubGrid = document.getElementById('categories-hub-grid');
+  const selectedContainer = document.getElementById('category-selected-container');
+  if (!hubGrid) return;
 
-  grid.innerHTML = GENRE_CARDS.map(g => `
-    <div class="media-card" style="padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; height: 180px; background: var(--bg-card);" data-genre="${g.id}">
-      <div style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">${g.name}</div>
-      <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">${g.desc}</div>
-      <div style="margin-top: 14px; font-size: 12px; font-weight: 600; color: var(--text-primary);"><i class="fas fa-arrow-right"></i> Explore Genre</div>
+  if (selectedContainer) selectedContainer.style.display = 'none';
+  hubGrid.style.display = 'grid';
+
+  hubGrid.innerHTML = api.TWENTY_GENRES.map(g => `
+    <div class="category-card-20" data-genre-id="${g.id}" data-genre-name="${g.name}">
+      <i class="fas ${g.icon} category-card-icon"></i>
+      <div class="category-card-title">${g.name}</div>
+      <div class="category-card-desc">${g.desc}</div>
+      <div style="margin-top: 14px; font-size: 12px; font-weight: 700; color: #ffffff;"><i class="fas fa-arrow-right"></i> Explore Category</div>
     </div>
   `).join('');
 
-  grid.querySelectorAll('.media-card').forEach((card, idx) => {
+  hubGrid.querySelectorAll('.category-card-20').forEach(card => {
     card.addEventListener('click', () => {
-      const g = GENRE_CARDS[idx];
-      state.catalogGenre = g.id.toString();
-      state.catalogPage = 1;
-      state.catalogMode = 'movies';
-      switchTab('movies');
-      const filterSelect = document.getElementById('catalog-genre-filter');
-      if (filterSelect) filterSelect.value = g.id.toString();
-      loadCatalog(false);
+      const gid = card.dataset.genreId;
+      const gname = card.dataset.genreName;
+      loadCategorySelected(gid, gname);
     });
+  });
+
+  const backBtn = document.getElementById('category-back-hub-btn');
+  if (backBtn) {
+    backBtn.onclick = () => {
+      if (selectedContainer) selectedContainer.style.display = 'none';
+      hubGrid.style.display = 'grid';
+    };
+  }
+}
+
+let currentCategoryGenreId = '';
+let currentCategoryPage = 1;
+
+async function loadCategorySelected(genreId, genreName) {
+  const hubGrid = document.getElementById('categories-hub-grid');
+  const selectedContainer = document.getElementById('category-selected-container');
+  const titleEl = document.getElementById('category-selected-title');
+  const counterEl = document.getElementById('category-selected-counter');
+  const gridEl = document.getElementById('category-selected-grid');
+  if (!selectedContainer || !gridEl) return;
+
+  currentCategoryGenreId = genreId;
+  currentCategoryPage = 1;
+
+  if (hubGrid) hubGrid.style.display = 'none';
+  selectedContainer.style.display = 'block';
+  if (titleEl) titleEl.textContent = genreName;
+  if (counterEl) counterEl.textContent = `Streaming the finest ${genreName} films & series`;
+
+  gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
+
+  let items = [];
+  if (genreId === 'anime') {
+    const res = await api.getAnimeDatabase({ category: 'all', page: 1 });
+    items = res.items;
+  } else if (genreId === 'superhero') {
+    items = await api.getFranchiseMovies('marvel');
+  } else {
+    items = await api.getByGenre('movie', genreId, 1);
+  }
+
+  gridEl.innerHTML = items.map(createCardMarkup).join('');
+  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+    card.addEventListener('click', () => openDetailModal(items[idx]));
+  });
+
+  const loadMoreBtn = document.getElementById('category-selected-loadmore');
+  if (loadMoreBtn) {
+    loadMoreBtn.onclick = async () => {
+      currentCategoryPage++;
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Loading...';
+      let moreItems = [];
+      if (currentCategoryGenreId === 'anime') {
+        const moreRes = await api.getAnimeDatabase({ category: 'all', page: currentCategoryPage });
+        moreItems = moreRes.items;
+      } else if (currentCategoryGenreId !== 'superhero') {
+        moreItems = await api.getByGenre('movie', currentCategoryGenreId, currentCategoryPage);
+      }
+      if (moreItems.length > 0) {
+        gridEl.insertAdjacentHTML('beforeend', moreItems.map(createCardMarkup).join(''));
+        gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+          card.onclick = () => openDetailModal(items[idx] || moreItems[idx]);
+        });
+      }
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = 'Load More Titles';
+    };
+  }
+}
+
+// ==========================================================================
+// Dedicated Anime Universe View
+// ==========================================================================
+let currentAnimeCategory = 'all';
+let currentAnimePage = 1;
+
+async function loadAnimeView() {
+  const gridEl = document.getElementById('anime-grid');
+  if (!gridEl) return;
+
+  gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
+
+  const res = await api.getAnimeDatabase({ category: currentAnimeCategory, page: 1 });
+  currentAnimePage = 1;
+  gridEl.innerHTML = res.items.map(createCardMarkup).join('');
+  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+    card.addEventListener('click', () => openDetailModal(res.items[idx]));
+  });
+
+  // Filter chips
+  document.querySelectorAll('[data-anime-cat]').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.animeCat === currentAnimeCategory);
+    chip.onclick = () => {
+      currentAnimeCategory = chip.dataset.animeCat;
+      loadAnimeView();
+    };
+  });
+
+  const loadMoreBtn = document.getElementById('anime-loadmore');
+  if (loadMoreBtn) {
+    loadMoreBtn.onclick = async () => {
+      currentAnimePage++;
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Loading...';
+      const more = await api.getAnimeDatabase({ category: currentAnimeCategory, page: currentAnimePage });
+      gridEl.insertAdjacentHTML('beforeend', more.items.map(createCardMarkup).join(''));
+      gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+        card.onclick = () => openDetailModal(res.items[idx] || more.items[idx]);
+      });
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = 'Load More Anime (+20)';
+    };
+  }
+}
+
+// ==========================================================================
+// Dedicated 2026 Movie Collection View
+// ==========================================================================
+let current2026Sort = 'popularity.desc';
+let current2026Page = 1;
+
+async function load2026View() {
+  const gridEl = document.getElementById('year2026-grid');
+  if (!gridEl) return;
+
+  gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
+
+  const res = await api.get2026Collection({ page: 1, sort: current2026Sort });
+  current2026Page = 1;
+
+  gridEl.innerHTML = res.items.map(item => createCardMarkup({
+    ...item,
+    is_upcoming: true,
+    quality_badge: '2026 Premiere'
+  })).join('');
+
+  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+    card.addEventListener('click', () => openDetailModal(res.items[idx]));
+  });
+
+  document.querySelectorAll('[data-2026-sort]').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset['2026Sort'] === current2026Sort);
+    chip.onclick = () => {
+      current2026Sort = chip.dataset['2026Sort'];
+      load2026View();
+    };
+  });
+
+  const loadMoreBtn = document.getElementById('year2026-loadmore');
+  if (loadMoreBtn) {
+    loadMoreBtn.onclick = async () => {
+      current2026Page++;
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Loading...';
+      const more = await api.get2026Collection({ page: current2026Page, sort: current2026Sort });
+      gridEl.insertAdjacentHTML('beforeend', more.items.map(item => createCardMarkup({
+        ...item,
+        is_upcoming: true,
+        quality_badge: '2026 Premiere'
+      })).join(''));
+      gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+        card.onclick = () => openDetailModal(res.items[idx] || more.items[idx]);
+      });
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = 'Load More 2026 Titles';
+    };
+  }
+}
+
+// ==========================================================================
+// Dedicated 2027 Upcoming Movie Database View
+// ==========================================================================
+async function load2027View() {
+  const gridEl = document.getElementById('year2027-grid');
+  if (!gridEl) return;
+
+  gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
+
+  const res = await api.get2027Collection({ page: 1 });
+  gridEl.innerHTML = res.items.map(item => createCardMarkup({
+    ...item,
+    is_upcoming: true,
+    quality_badge: '2027 Tentpole'
+  })).join('');
+
+  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+    card.addEventListener('click', () => openDetailModal(res.items[idx]));
+  });
+}
+
+// ==========================================================================
+// Curated Cinema Collections View
+// ==========================================================================
+let currentCollectionTheme = 'netflix';
+
+async function loadCollectionsView() {
+  const gridEl = document.getElementById('collections-grid');
+  if (!gridEl) return;
+
+  gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
+
+  document.querySelectorAll('[data-collection]').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.collection === currentCollectionTheme);
+    chip.onclick = () => {
+      currentCollectionTheme = chip.dataset.collection;
+      loadCollectionsView();
+    };
+  });
+
+  const items = await api.getCuratedThematicCollection(currentCollectionTheme);
+  gridEl.innerHTML = items.map(createCardMarkup).join('');
+  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+    card.addEventListener('click', () => openDetailModal(items[idx]));
   });
 }
 
@@ -1258,6 +1528,75 @@ function setupDetailModal() {
       }
     });
   }
+
+  // Person Modal Listeners
+  const personModal = document.getElementById('person-modal');
+  const personCloseBtn = document.getElementById('person-modal-close');
+  if (personModal && personCloseBtn) {
+    personCloseBtn.addEventListener('click', () => {
+      personModal.classList.remove('active');
+    });
+    personModal.addEventListener('click', (e) => {
+      if (e.target === personModal) {
+        personModal.classList.remove('active');
+      }
+    });
+  }
+}
+
+/**
+ * Open Actor / Director Person Modal with Full Filmography
+ */
+async function openPersonModal(personId) {
+  const modal = document.getElementById('person-modal');
+  if (!modal || !personId) return;
+  soundFX.playClick();
+
+  const photoEl = document.getElementById('person-photo');
+  const nameEl = document.getElementById('person-name');
+  const roleEl = document.getElementById('person-role');
+  const bioMetaEl = document.getElementById('person-bio-meta');
+  const bioEl = document.getElementById('person-biography');
+  const gridEl = document.getElementById('person-filmography-grid');
+
+  try {
+    const person = await api.getPersonDetails(personId);
+    if (nameEl) nameEl.textContent = person.name || 'Cast Member';
+    if (roleEl) roleEl.textContent = person.known_for_department || 'Actor / Creator';
+    if (photoEl) {
+      photoEl.src = person.profile_path
+        ? `https://image.tmdb.org/t/p/w300${person.profile_path}`
+        : 'assets/avatars/netflix-red.svg';
+    }
+    if (bioMetaEl) {
+      const parts = [];
+      if (person.birthday) parts.push(`Born: ${person.birthday}`);
+      if (person.place_of_birth) parts.push(person.place_of_birth);
+      bioMetaEl.textContent = parts.join(' · ') || 'Cinema Artist';
+    }
+    if (bioEl) {
+      bioEl.textContent = person.biography || 'Biography currently being synchronized from cinematic archives.';
+    }
+
+    if (gridEl && person.combined_credits?.cast) {
+      const sorted = (person.combined_credits.cast || [])
+        .filter(c => c.poster_path && (c.title || c.name))
+        .sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0))
+        .slice(0, 16);
+
+      gridEl.innerHTML = sorted.map(item => createCardMarkup(item)).join('');
+      gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
+        card.addEventListener('click', () => {
+          modal.classList.remove('active');
+          openDetailModal(sorted[idx]);
+        });
+      });
+    }
+
+    modal.classList.add('active');
+  } catch (e) {
+    console.warn('[WatchX] Failed to load person details:', e);
+  }
 }
 
 async function openDetailModal(media) {
@@ -1408,6 +1747,85 @@ async function openDetailModal(media) {
       } else {
         dirEl.innerHTML = '';
       }
+    }
+
+    // Production Studios & Box Office
+    const prodEl = document.getElementById('detail-production');
+    if (prodEl) {
+      let metaParts = [];
+      if (full?.production_companies && full.production_companies.length > 0) {
+        metaParts.push(`<strong>Studios:</strong> ${full.production_companies.slice(0, 3).map(p => p.name).join(', ')}`);
+      }
+      if (full?.budget > 0) {
+        metaParts.push(`<strong>Budget:</strong> $${(full.budget / 1000000).toFixed(0)}M`);
+      }
+      if (full?.revenue > 0) {
+        metaParts.push(`<strong>Box Office:</strong> $${(full.revenue / 1000000).toFixed(0)}M`);
+      }
+      prodEl.innerHTML = metaParts.join(' · ');
+    }
+
+    // Verified Legal Watch Providers (Where to Watch Legally)
+    const provSection = document.getElementById('detail-providers-section');
+    const provList = document.getElementById('detail-providers-list');
+    if (provList) {
+      const providers = api.extractWatchProviders(full);
+      if (providers.stream.length > 0 || providers.rent.length > 0) {
+        if (provSection) provSection.style.display = 'block';
+        let provHtml = '';
+        if (providers.stream.length > 0) {
+          provHtml += providers.stream.slice(0, 4).map(p => `
+            <div class="provider-badge" title="Stream on ${p.name}">
+              ${p.logo ? `<img src="${p.logo}" alt="${p.name}">` : '<i class="fas fa-play"></i>'}
+              <span>Stream on ${p.name}</span>
+            </div>
+          `).join('');
+        }
+        if (providers.rent.length > 0 && providers.stream.length < 3) {
+          provHtml += providers.rent.slice(0, 2).map(p => `
+            <div class="provider-badge" style="opacity: 0.85;" title="Rent or Buy on ${p.name}">
+              ${p.logo ? `<img src="${p.logo}" alt="${p.name}">` : '<i class="fas fa-cart-shopping"></i>'}
+              <span>Rent/Buy on ${p.name}</span>
+            </div>
+          `).join('');
+        }
+        provList.innerHTML = provHtml;
+      } else if (isUpcoming) {
+        if (provSection) provSection.style.display = 'block';
+        provList.innerHTML = `
+          <div class="provider-badge">
+            <i class="fas fa-film"></i>
+            <span>Theatrical Premiere · Coming to Cinemas Worldwide</span>
+          </div>
+        `;
+      } else {
+        if (provSection) provSection.style.display = 'block';
+        provList.innerHTML = `
+          <div class="provider-badge">
+            <i class="fas fa-satellite-dish"></i>
+            <span>WatchX Cinema Direct HD Stream</span>
+          </div>
+        `;
+      }
+    }
+
+    // Interactive Top-Billed Cast & Crew Carousel (Click to Open Person Profile)
+    const castScroll = document.getElementById('detail-cast-scroll');
+    if (castScroll && full?.credits?.cast && full.credits.cast.length > 0) {
+      castScroll.innerHTML = full.credits.cast.slice(0, 16).map(c => `
+        <div class="cast-card" data-person-id="${c.id}" title="${c.name} as ${c.character || 'Cast'}">
+          <img class="cast-card-photo" src="${c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : 'assets/avatars/netflix-red.svg'}" alt="${c.name}" loading="lazy">
+          <div class="cast-card-name">${c.name}</div>
+          <div class="cast-card-char">${c.character || 'Cast'}</div>
+        </div>
+      `).join('');
+
+      castScroll.querySelectorAll('.cast-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const personId = card.dataset.personId;
+          if (personId) openPersonModal(personId);
+        });
+      });
     }
 
     // Official Trailer
