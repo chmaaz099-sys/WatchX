@@ -8,8 +8,8 @@
   <meta name="description" content="WatchX - Stream 10,000+ movies, TV series, anime, and documentaries in cinematic 1080p and 4K Ultra HD. Pure black monochrome luxury.">
   <meta name="theme-color" content="#000000">
 
-  <!-- Strict Content Security Policy: Authorizes video streams & YouTube NoCookie while preventing rogue ad injections -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-src 'self' https://vidlink.pro https://*.vidlink.pro https://vidsrc.cc https://*.vidsrc.cc https://embed.su https://*.embed.su https://player.autoembed.cc https://*.autoembed.cc https://www.2embed.cc https://*.2embed.cc https://www.youtube-nocookie.com https://www.youtube.com blob: data:; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; connect-src 'self' https: wss:;">
+  <!-- Strict Content Security Policy: Authorizes cinema video streams & YouTube NoCookie while preventing ad injections -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-src 'self' https://vidsrc.to https://*.vidsrc.to https://vidsrc.xyz https://*.vidsrc.xyz https://vidsrc.sh https://*.vidsrc.sh https://vidsrc.cc https://*.vidsrc.cc https://player.autoembed.cc https://*.autoembed.cc https://www.2embed.cc https://*.2embed.cc https://vidlink.pro https://*.vidlink.pro https://vidprime.top https://*.vidprime.top https://www.youtube-nocookie.com https://*.youtube-nocookie.com https://www.youtube.com https://*.youtube.com blob: data:; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; object-src 'self' data: blob: https:; connect-src 'self' https: wss:;">
 
   <!-- Preconnect & DNS-Prefetch for Speed -->
   <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
@@ -29,7 +29,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Main Pure Black Monochrome Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=20">
+  <link rel="stylesheet" href="css/style.css?v=27">
 </head>
 <body>
 
@@ -40,21 +40,45 @@
     <div class="header-left">
       <a href="#" class="logo-brand" id="brand-logo">
         WATCHX <span class="logo-badge">CINEMA</span>
+        <span class="kids-badge" id="header-kids-badge" style="display: none; background: #ffffff; color: #000000; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 1px; margin-left: 6px;">KIDS</span>
       </a>
       <ul class="nav-links">
         <li><a href="#" class="nav-link active" data-tab="home">Home</a></li>
         <li><a href="#" class="nav-link" data-tab="movies">Movies</a></li>
         <li><a href="#" class="nav-link" data-tab="tv">TV Shows</a></li>
+        <li><a href="#" class="nav-link" data-tab="latest">Latest</a></li>
+        <li><a href="#" class="nav-link" data-tab="comingsoon">Coming Soon</a></li>
+        <li><a href="#" class="nav-link" data-tab="discover">Discover</a></li>
         <li><a href="#" class="nav-link" data-tab="categories">Categories</a></li>
         <li><a href="#" class="nav-link" data-tab="mylist">My List</a></li>
       </ul>
     </div>
 
     <div class="header-right">
-      <!-- Search Input -->
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" id="header-search-input" placeholder="Search titles, actors, genres... (/)" autocomplete="off">
+      <!-- Search Input with Instant Suggestions -->
+      <div class="search-box-wrapper" style="position: relative;">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="header-search-input" placeholder="Search titles, actors, genres... (/)" autocomplete="off">
+        </div>
+        <div class="search-suggestions-panel" id="search-suggestions-container" style="display: none;"></div>
+      </div>
+
+      <!-- Notifications Center Bell -->
+      <div class="notification-menu-wrapper" style="position: relative;">
+        <button class="header-icon-btn" id="notifications-btn" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+        </button>
+        <div class="notifications-dropdown" id="notifications-dropdown-menu" style="display: none;">
+          <div class="notifications-header">
+            <h4>Notifications</h4>
+            <button class="btn-text-subtle" id="notif-mark-all-read">Mark all as read</button>
+          </div>
+          <div class="notifications-list" id="notifications-list-container">
+            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">No new alerts</div>
+          </div>
+        </div>
       </div>
 
       <!-- Sound Effects Toggle Button -->
@@ -70,14 +94,14 @@
       <!-- User Profile Avatar & Dropdown -->
       <div class="profile-menu-wrapper">
         <button class="user-profile-btn" id="header-profile-btn" title="Profile & Account">
-          <img class="user-avatar" id="header-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar">
+          <img class="user-avatar" id="header-user-avatar" src="assets/avatars/netflix-red.svg" alt="Avatar">
         </button>
 
         <div class="profile-dropdown" id="profile-dropdown-menu">
           <div class="dropdown-user-header">
-            <img class="dropdown-avatar" id="dropdown-profile-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar">
+            <img class="dropdown-avatar" id="dropdown-profile-avatar" src="assets/avatars/netflix-red.svg" alt="Avatar">
             <div class="dropdown-user-info">
-              <span class="dropdown-name" id="dropdown-profile-name">Primary</span>
+              <span class="dropdown-name" id="dropdown-profile-name">Profile 1</span>
               <span class="dropdown-status" id="dropdown-user-email">VIP Member</span>
             </div>
           </div>
@@ -87,6 +111,12 @@
             </button>
             <button class="dropdown-item" id="menu-manage-profiles">
               <i class="fas fa-user-pen"></i> Manage Profiles
+            </button>
+            <button class="dropdown-item" id="menu-admin-dashboard">
+              <i class="fas fa-screwdriver-wrench"></i> Admin Dashboard
+            </button>
+            <button class="dropdown-item" id="menu-help-center">
+              <i class="fas fa-circle-question"></i> Help & Support
             </button>
             <button class="dropdown-item" id="menu-account-settings">
               <i class="fas fa-sliders"></i> Account & Settings
@@ -229,6 +259,320 @@
   </section>
 
   <!-- ==========================================================================
+       Latest Movies & Series View (New Releases Always Updated)
+       ========================================================================== -->
+  <section class="catalog-view" id="latest-view" style="display: none;">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <h2>Latest Releases</h2>
+        <span class="catalog-counter" id="latest-counter">Newly released movies and series streaming now</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item chips-scroll-container">
+          <button class="filter-chip active" data-latest-genre="">All Latest</button>
+          <button class="filter-chip" data-latest-genre="28">Action</button>
+          <button class="filter-chip" data-latest-genre="878">Sci-Fi</button>
+          <button class="filter-chip" data-latest-genre="27">Horror</button>
+          <button class="filter-chip" data-latest-genre="16">Animation</button>
+          <button class="filter-chip" data-latest-genre="35">Comedy</button>
+          <button class="filter-chip" data-latest-genre="99">Documentaries</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="latest-grid"></div>
+    <div class="pagination-footer">
+      <button class="btn-secondary-dark" id="latest-loadmore">Load More Releases</button>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       Coming Soon & Release Tracker View
+       ========================================================================== -->
+  <section class="catalog-view" id="comingsoon-view" style="display: none;">
+    <div class="comingsoon-hero-spotlight" id="comingsoon-hero">
+      <div class="comingsoon-hero-backdrop-container">
+        <img id="comingsoon-hero-bg" class="comingsoon-hero-backdrop" src="" alt="Coming Soon Banner">
+        <div class="spotlight-vignette"></div>
+      </div>
+      <div class="comingsoon-hero-content">
+        <div class="spotlight-badge"><i class="fas fa-clock"></i> MOST ANTICIPATED PREMIERE</div>
+        <h1 class="comingsoon-hero-title" id="comingsoon-hero-title">Upcoming Blockbuster</h1>
+        <div class="comingsoon-countdown-box">
+          <span class="countdown-pill" id="comingsoon-hero-countdown">⏳ Confirmed Premiere</span>
+          <span class="countdown-pill" id="comingsoon-hero-date">2025</span>
+        </div>
+        <p class="spotlight-desc" id="comingsoon-hero-overview">Upcoming theatrical release streaming soon on WatchX.</p>
+        <div class="spotlight-actions">
+          <button class="btn-primary-white" id="comingsoon-hero-trailer-btn">
+            <i class="fas fa-play"></i> Watch Official 4K Trailer
+          </button>
+          <button class="btn-secondary-dark" id="comingsoon-hero-notify-btn">
+            <i class="fas fa-bell"></i> Notify Me
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="catalog-header" style="margin-top: 36px;">
+      <div class="catalog-title-group">
+        <h2>Release Calendar</h2>
+        <span class="catalog-counter">Upcoming blockbusters with countdown timers</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item chips-scroll-container">
+          <button class="filter-chip active" data-upcoming-cat="all">All Upcoming</button>
+          <button class="filter-chip" data-upcoming-cat="week">This Week</button>
+          <button class="filter-chip" data-upcoming-cat="month">This Month</button>
+          <button class="filter-chip" data-upcoming-cat="next_month">Next Month</button>
+          <button class="filter-chip" data-upcoming-cat="later_this_year">Later This Year</button>
+          <button class="filter-chip" data-upcoming-cat="next_year">Next Year</button>
+          <button class="filter-chip" data-upcoming-cat="tv">Upcoming Series</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="comingsoon-grid"></div>
+  </section>
+
+  <!-- ==========================================================================
+       Discover & Curated Collections View
+       ========================================================================== -->
+  <section class="catalog-view" id="discover-view" style="display: none;">
+    <!-- Movie Roulette (Surprise Me) Interactive Hub -->
+    <div class="discover-roulette-card">
+      <div class="roulette-content">
+        <div class="spotlight-badge"><i class="fas fa-dice"></i> MOVIE ROULETTE</div>
+        <h2>Can't decide what to watch?</h2>
+        <p>Spin the WatchX Cinema Wheel to discover a critically acclaimed film instantly.</p>
+        <div class="roulette-controls">
+          <select id="roulette-genre-select" class="roulette-select" aria-label="Select Genre for Roulette">
+            <option value="">Any Genre</option>
+            <option value="28">Action</option>
+            <option value="878">Sci-Fi</option>
+            <option value="27">Horror</option>
+            <option value="35">Comedy</option>
+            <option value="18">Drama</option>
+            <option value="16">Anime / Animation</option>
+          </select>
+          <button class="btn-primary-white" id="roulette-spin-btn">
+            <i class="fas fa-dice-five"></i> Spin Roulette
+          </button>
+        </div>
+      </div>
+      <div class="roulette-result-box" id="roulette-result" style="display: none;"></div>
+    </div>
+
+    <!-- Franchises & Universes Hub -->
+    <div class="catalog-header" style="margin-top: 36px;">
+      <div class="catalog-title-group">
+        <h2>Legendary Franchises</h2>
+        <span class="catalog-counter">Binge iconic sagas and cinematic universes</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item chips-scroll-container">
+          <button class="filter-chip active" data-franchise="marvel">Marvel Universe</button>
+          <button class="filter-chip" data-franchise="starwars">Star Wars Saga</button>
+          <button class="filter-chip" data-franchise="batman">Dark Knight Universe</button>
+          <button class="filter-chip" data-franchise="harrypotter">Harry Potter</button>
+          <button class="filter-chip" data-franchise="lotr">Lord of the Rings</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="franchise-grid"></div>
+
+    <!-- Decades Time Capsule Hub -->
+    <div class="catalog-header" style="margin-top: 48px;">
+      <div class="catalog-title-group">
+        <h2>Decades Time Capsule</h2>
+        <span class="catalog-counter">Travel back through the golden eras of cinema</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item chips-scroll-container">
+          <button class="filter-chip active" data-decade="2020s">2020s Modern</button>
+          <button class="filter-chip" data-decade="2010s">2010s Hits</button>
+          <button class="filter-chip" data-decade="2000s">2000s Classics</button>
+          <button class="filter-chip" data-decade="90s">90s Golden Era</button>
+          <button class="filter-chip" data-decade="80s">80s Vintage</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="decade-grid"></div>
+  </section>
+
+  <!-- ==========================================================================
+       Admin Dashboard View (Platform Health, Catalog Sync, Moderation)
+       ========================================================================== -->
+  <section class="settings-view" id="admin-view" style="display: none;">
+    <div class="settings-header">
+      <h2>WatchX Admin & Control Center</h2>
+      <span class="meta-pill"><i class="fas fa-shield"></i> Authorized Operations</span>
+    </div>
+
+    <!-- Metrics Cards Grid -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <div class="stat-num" id="admin-stat-users">1</div>
+        <div class="stat-title">Registered Accounts</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="stat-num" id="admin-stat-profiles">4</div>
+        <div class="stat-title">Active Profiles</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="stat-num" id="admin-stat-catalog">20,000+</div>
+        <div class="stat-title">Catalog Titles Indexed</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="stat-num" id="admin-stat-servers">5 / 5</div>
+        <div class="stat-title">Streaming Servers Online</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="stat-num" id="admin-stat-latency">42 ms</div>
+        <div class="stat-title">API Latency</div>
+      </div>
+    </div>
+
+    <!-- Admin Actions Section -->
+    <div class="admin-actions-section">
+      <h3>System Maintenance & Catalog Operations</h3>
+      <div class="admin-actions-grid">
+        <div class="admin-action-box">
+          <h4>Purge In-Memory Cache</h4>
+          <p>Instantly invalidates RAM and SessionStorage cache for fresh TMDB synchronization.</p>
+          <button class="btn-secondary-dark" id="admin-purge-cache-btn">
+            <i class="fas fa-broom"></i> Purge Cache Now
+          </button>
+        </div>
+        <div class="admin-action-box">
+          <h4>Synchronize 10,000+ Movies</h4>
+          <p>Re-runs discover endpoints and verifies stream sources across Server 1-5.</p>
+          <button class="btn-primary-white" id="admin-sync-catalog-btn">
+            <i class="fas fa-rotate"></i> Synchronize Catalog
+          </button>
+        </div>
+        <div class="admin-action-box">
+          <h4>Broken Stream Scanner</h4>
+          <p>Audits reported broken stream links and resets provider mappings.</p>
+          <button class="btn-secondary-dark" id="admin-scan-streams-btn">
+            <i class="fas fa-stethoscope"></i> Run Stream Health Audit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Audit Log -->
+    <div class="admin-audit-section" style="margin-top: 36px;">
+      <h3>Recent Security & Session Audit Log</h3>
+      <div class="audit-log-table-wrapper">
+        <table class="audit-log-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Event</th>
+              <th>Actor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admin-audit-tbody">
+            <tr>
+              <td>Just now</td>
+              <td>Google OAuth Session Initialized</td>
+              <td>member@watchx.stream</td>
+              <td><span class="meta-pill"><i class="fas fa-check"></i> Verified</span></td>
+            </tr>
+            <tr>
+              <td>5 mins ago</td>
+              <td>PBKDF2 4-Digit Profile PIN Verification</td>
+              <td>Profile 1</td>
+              <td><span class="meta-pill"><i class="fas fa-check"></i> Success</span></td>
+            </tr>
+            <tr>
+              <td>12 mins ago</td>
+              <td>Stream Failover Health Check (Servers 1..5)</td>
+              <td>WatchX Engine</td>
+              <td><span class="meta-pill"><i class="fas fa-check"></i> 100% 200 OK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       Help & Support Center View (FAQ & Problem Reporting)
+       ========================================================================== -->
+  <section class="settings-view" id="help-view" style="display: none;">
+    <div class="settings-header">
+      <h2>Help & Support Center</h2>
+      <span class="catalog-counter">Frequently Asked Questions & Technical Assistance</span>
+    </div>
+
+    <div class="help-grid-layout">
+      <!-- FAQ Accordion -->
+      <div class="faq-container">
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">Frequently Asked Questions</h3>
+        <div class="faq-item">
+          <div class="faq-question"><span>How do I stream in 1080p Full HD?</span> <i class="fas fa-chevron-down"></i></div>
+          <div class="faq-answer">All released titles on WatchX are served in 1080p FHD by default. If your network speed fluctuates, click the Server button in the video player to switch seamlessly between Server 1, Server 2, Server 3, Server 4, and Server 5.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question"><span>How do I set up a 4-Digit Profile PIN?</span> <i class="fas fa-chevron-down"></i></div>
+          <div class="faq-answer">Navigate to Settings &gt; Profile &gt; 4-Digit Security PIN. Enter your desired 4-digit code. WatchX securely hashes your PIN using PBKDF2 cryptography with unique random salts.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question"><span>How does the 240Hz Extreme Performance Engine work?</span> <i class="fas fa-chevron-down"></i></div>
+          <div class="faq-answer">Press Shift+F on your keyboard to reveal the real-time frame rate HUD. If you have a 120Hz, 144Hz, 165Hz, or 240Hz monitor, WatchX synchronizes all carousels, modals, and animations to your display's native refresh rate using requestAnimationFrame.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question"><span>How does Coming Soon Notify Me work?</span> <i class="fas fa-chevron-down"></i></div>
+          <div class="faq-answer">On the Coming Soon page, click the 'Notify Me' button on any upcoming movie or series. WatchX adds the release to your personal notifications center and notifies you the day the title becomes streamable.</div>
+        </div>
+      </div>
+
+      <!-- Support Forms -->
+      <div class="support-forms-container">
+        <!-- Contact Support -->
+        <div class="support-card">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Contact VIP Support</h3>
+          <form id="support-contact-form">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 12px; color: var(--text-muted);">Issue Category</label>
+              <select id="support-category" class="roulette-select" style="width: 100%;">
+                <option value="Streaming / Video">Streaming / Video Playback</option>
+                <option value="Profiles & PIN">Profiles &amp; PIN Security</option>
+                <option value="Account / OAuth">Account / OAuth</option>
+                <option value="Feature Request">Feature Request</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label style="font-size: 12px; color: var(--text-muted);">Message</label>
+              <textarea id="support-message" rows="3" style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-subtle); color: #fff; padding: 10px; border-radius: 6px; font-family: inherit; resize: vertical;" placeholder="Describe your issue..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary-white" style="width: 100%;">Submit Support Request</button>
+            <div id="support-status" style="margin-top: 10px; font-size: 13px; color: var(--text-secondary); display: none;"></div>
+          </form>
+        </div>
+
+        <!-- Report Broken Stream -->
+        <div class="support-card" style="margin-top: 20px;">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Report Broken Stream</h3>
+          <form id="report-stream-form">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 12px; color: var(--text-muted);">Movie / Series Title</label>
+              <input type="text" id="report-title" style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-subtle); color: #fff; padding: 10px; border-radius: 6px; font-family: inherit;" placeholder="e.g. Interstellar">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label style="font-size: 12px; color: var(--text-muted);">Problem Description</label>
+              <input type="text" id="report-problem" style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-subtle); color: #fff; padding: 10px; border-radius: 6px; font-family: inherit;" placeholder="e.g. Server 1 buffering">
+            </div>
+            <button type="submit" class="btn-secondary-dark" style="width: 100%;">Submit Report</button>
+            <div id="report-status" style="margin-top: 10px; font-size: 13px; color: var(--text-secondary); display: none;"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
        Categories View
        ========================================================================== -->
   <section class="catalog-view" id="categories-view" style="display: none;">
@@ -252,9 +596,9 @@
       </div>
       <div class="filter-toolbar">
         <div class="filter-item">
-          <button class="btn-secondary-dark active-chip" id="mylist-filter-all">All</button>
-          <button class="btn-secondary-dark" id="mylist-filter-movies">Movies</button>
-          <button class="btn-secondary-dark" id="mylist-filter-tv">TV Shows</button>
+          <button class="btn-secondary-dark active-chip" id="mylist-filter-all">Watchlist</button>
+          <button class="btn-secondary-dark" id="mylist-filter-favs">Favorites</button>
+          <button class="btn-secondary-dark" id="mylist-filter-alerts">Notify Me Alerts</button>
         </div>
       </div>
     </div>
@@ -384,7 +728,7 @@
               <div class="settings-row-label">Malicious Ad & Redirect Shield</div>
               <div class="settings-row-desc">Blocks popunders, fake CAPTCHAs, top-level redirects, and untrusted scripts</div>
             </div>
-            <span class="meta-pill"><i class="fas fa-shield-halved"></i> Active · Strict Sandbox</span>
+            <span class="meta-pill"><i class="fas fa-shield-halved"></i> Active · Anti-Redirect Shield</span>
           </div>
           <div class="settings-row-item">
             <div>
@@ -624,6 +968,12 @@
             <button class="btn-secondary-dark" id="detail-list-btn">
               <i class="fas fa-plus"></i> My List
             </button>
+            <button class="btn-secondary-dark" id="detail-favorite-btn">
+              <i class="fas fa-heart"></i> Favorite
+            </button>
+            <button class="btn-secondary-dark" id="detail-share-btn">
+              <i class="fas fa-share-nodes"></i> Share
+            </button>
             <button class="btn-secondary-dark" id="detail-trailer-btn" style="display: none;">
               <i class="fas fa-film"></i> Official Trailer
             </button>
@@ -645,7 +995,8 @@
           </div>
           <div class="detail-side-meta">
             <div id="detail-cast" style="margin-bottom: 12px;"></div>
-            <div id="detail-genres"></div>
+            <div id="detail-genres" style="margin-bottom: 12px;"></div>
+            <div id="detail-director" style="font-size: 13px; color: var(--text-secondary);"></div>
           </div>
         </div>
 
@@ -658,8 +1009,45 @@
           <div id="detail-episodes-list"></div>
         </div>
 
+        <!-- Community Ratings & Reviews Section -->
+        <div class="detail-reviews-section" style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 18px; font-weight: 700;">Community Ratings & Reviews</h3>
+            <span class="meta-pill" id="detail-avg-rating"><i class="fas fa-star"></i> 8.6 / 10 Average</span>
+          </div>
+
+          <!-- Review Composer Box -->
+          <div class="review-composer-card">
+            <div class="rating-stars-picker" id="review-stars-picker">
+              <span style="font-size: 13px; font-weight: 600; margin-right: 12px;">Your Rating:</span>
+              <span class="star-rating-val" id="review-rating-display">10 / 10</span>
+              <div class="stars-row" id="stars-row">
+                <i class="fas fa-star star-btn active" data-val="1"></i>
+                <i class="fas fa-star star-btn active" data-val="2"></i>
+                <i class="fas fa-star star-btn active" data-val="3"></i>
+                <i class="fas fa-star star-btn active" data-val="4"></i>
+                <i class="fas fa-star star-btn active" data-val="5"></i>
+                <i class="fas fa-star star-btn active" data-val="6"></i>
+                <i class="fas fa-star star-btn active" data-val="7"></i>
+                <i class="fas fa-star star-btn active" data-val="8"></i>
+                <i class="fas fa-star star-btn active" data-val="9"></i>
+                <i class="fas fa-star star-btn active" data-val="10"></i>
+              </div>
+            </div>
+            <textarea id="detail-review-textarea" rows="2" placeholder="Write a review as your active profile..." style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-subtle); color: #fff; padding: 12px; border-radius: 6px; font-family: inherit; resize: vertical; margin-top: 12px;"></textarea>
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+              <button class="btn-primary-white" id="detail-submit-review-btn">
+                <i class="fas fa-paper-plane"></i> Post Review
+              </button>
+            </div>
+          </div>
+
+          <!-- Community Reviews Feed -->
+          <div class="reviews-feed" id="detail-reviews-list" style="margin-top: 20px;"></div>
+        </div>
+
         <!-- Similar Recommendations Section -->
-        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+        <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
           <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 18px;">More Like This</h3>
           <div class="media-grid" id="detail-similar-grid"></div>
         </div>
@@ -684,15 +1072,32 @@
       </div>
 
       <div class="player-header-right">
+        <!-- Quick Skip Controls -->
+        <button class="player-ep-btn" id="player-skip-back-10" title="Rewind 10 Seconds (Left Arrow)">
+          <i class="fas fa-rotate-left"></i> 10s
+        </button>
+        <button class="player-ep-btn" id="player-skip-forward-10" title="Forward 10 Seconds (Right Arrow)">
+          <i class="fas fa-rotate-right"></i> 10s
+        </button>
+
         <!-- TV Episode Controls -->
         <div class="player-ep-controls" id="player-episode-controls" style="display: none;">
           <button class="player-ep-btn" id="player-prev-ep" title="Previous Episode (P)"><i class="fas fa-step-backward"></i> Prev</button>
           <button class="player-ep-btn" id="player-next-ep" title="Next Episode (N)">Next <i class="fas fa-step-forward"></i></button>
         </div>
 
-        <!-- Silent Stream Switcher (Discreet source rotation without technical names) -->
+        <!-- Speed Selector Button -->
+        <button class="player-ep-btn" id="player-speed-btn" title="Playback Speed">
+          <i class="fas fa-gauge"></i> <span id="player-speed-label">1.0x</span>
+        </button>
+
+        <!-- Silent Stream Switcher -->
         <button class="player-ep-btn" id="player-switch-stream-btn" title="Switch Stream Server" style="display: inline-flex; align-items: center; gap: 6px;">
           <i class="fas fa-rotate"></i> <span id="player-stream-label">Server 1</span>
+        </button>
+
+        <button class="player-icon-btn" id="player-pip-btn" title="Picture in Picture">
+          <i class="fas fa-clone"></i>
         </button>
 
         <button class="player-icon-btn" id="player-fullscreen-btn" title="Fullscreen (F)">
@@ -704,12 +1109,23 @@
     <!-- Precision Resume Toast -->
     <div class="player-resume-toast" id="player-resume-toast" style="display: none;"></div>
 
-    <div class="player-container">
+    <div class="player-container" id="player-media-container">
       <div class="player-spinner" id="player-spinner">
         <div class="spinner-icon"></div>
         <span>Buffering WatchX stream...</span>
       </div>
-      <iframe id="player-iframe" class="player-iframe" loading="eager" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+      <div id="player-mount-point" style="width: 100%; height: 100%; position: relative;">
+        <iframe id="player-iframe" class="player-iframe" loading="eager" referrerpolicy="origin" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+      </div>
+
+      <!-- Interactive Playback Scrubber Bar -->
+      <div class="player-timeline-bar" id="player-timeline-bar">
+        <span class="player-time-label" id="player-time-current">0:00</span>
+        <div class="player-scrubber-track" id="player-scrubber-track">
+          <div class="player-scrubber-progress" id="player-scrubber-progress"></div>
+        </div>
+        <span class="player-time-label" id="player-time-total">2:00:00</span>
+      </div>
     </div>
   </div>
 
@@ -795,6 +1211,6 @@
   </footer>
 
   <!-- Core App Controller -->
-  <script type="module" src="js/app.js?v=20"></script>
+  <script type="module" src="js/app.js?v=27"></script>
 </body>
 </html>

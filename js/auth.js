@@ -4,7 +4,7 @@
  * 4-Digit Secure Profile PINs, and Avatar Customization.
  */
 
-import { dbClient, DEFAULT_AVATARS } from './supabase-client.js?v=20';
+import { dbClient, DEFAULT_AVATARS } from './supabase-client.js?v=27';
 
 class AuthProfileManager {
   constructor() {
@@ -131,6 +131,24 @@ class AuthProfileManager {
       });
     }
 
+    // Admin Dashboard Menu Item
+    const menuAdmin = document.getElementById('menu-admin-dashboard');
+    if (menuAdmin) {
+      menuAdmin.addEventListener('click', () => {
+        if (profileDropdown) profileDropdown.classList.remove('active');
+        window.dispatchEvent(new CustomEvent('watchx:navigate', { detail: 'admin' }));
+      });
+    }
+
+    // Help & Support Center Menu Item
+    const menuHelp = document.getElementById('menu-help-center');
+    if (menuHelp) {
+      menuHelp.addEventListener('click', () => {
+        if (profileDropdown) profileDropdown.classList.remove('active');
+        window.dispatchEvent(new CustomEvent('watchx:navigate', { detail: 'help' }));
+      });
+    }
+
     // Auth Modal Handlers
     this.setupAuthModal();
   }
@@ -191,16 +209,24 @@ class AuthProfileManager {
 
   showProfilesScreen() {
     if (this.profilesScreen) {
-      this.profilesScreen.classList.add('active');
-      this.profilesScreen.style.display = 'flex';
       this.renderProfiles();
+      this.profilesScreen.style.display = 'flex';
+      requestAnimationFrame(() => {
+        this.profilesScreen.classList.add('active');
+      });
+      document.body.style.overflow = 'hidden';
     }
   }
 
   hideProfilesScreen() {
     if (this.profilesScreen) {
       this.profilesScreen.classList.remove('active');
-      this.profilesScreen.style.display = 'none';
+      setTimeout(() => {
+        if (!this.profilesScreen.classList.contains('active')) {
+          this.profilesScreen.style.display = 'none';
+        }
+      }, 200);
+      document.body.style.overflow = '';
     }
   }
 
@@ -227,6 +253,12 @@ class AuthProfileManager {
 
     const dropdownAvatar = document.getElementById('dropdown-profile-avatar');
     if (dropdownAvatar) dropdownAvatar.src = profile.avatar_url;
+
+    // Kids Profile Badge Indicator
+    const kidsBadge = document.getElementById('header-kids-badge');
+    if (kidsBadge) {
+      kidsBadge.style.display = profile.is_kids ? 'inline-block' : 'none';
+    }
 
     if (triggerEvents) {
       this.notifyProfileChanged(profile);
@@ -508,8 +540,8 @@ class AuthProfileManager {
             updates.pin_hash = null;
             updates.pin_salt = null;
           } else if (newPinVal && newPinVal.length === 4) {
-            const salt = await import('./supabase-client.js?v=20').then(m => m.generateSalt());
-            const hash = await import('./supabase-client.js?v=20').then(m => m.hashPin(newPinVal, salt));
+            const salt = await import('./supabase-client.js?v=25').then(m => m.generateSalt());
+            const hash = await import('./supabase-client.js?v=25').then(m => m.hashPin(newPinVal, salt));
             updates.pin_enabled = true;
             updates.pin_salt = salt;
             updates.pin_hash = hash;

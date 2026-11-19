@@ -819,7 +819,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ==========================================================================
-   Who's Watching Profile Gate Screen
+   Who's Watching Profile Gate Screen (Ultra-Smooth 240Hz Transitions)
    ========================================================================== */
 .profiles-screen {
   position: fixed;
@@ -827,16 +827,20 @@ input:focus, select:focus, textarea:focus {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--bg-primary);
+  background: #000000;
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 5000;
+  opacity: 0;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
 }
 
 .profiles-screen.active {
-  display: flex;
+  opacity: 1;
 }
 
 .profiles-title {
@@ -845,6 +849,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-primary);
   margin-bottom: 40px;
   text-align: center;
+  letter-spacing: -0.5px;
 }
 
 .profiles-grid {
@@ -864,21 +869,35 @@ input:focus, select:focus, textarea:focus {
   gap: 14px;
   cursor: pointer;
   user-select: none;
+  contain: layout style;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .profile-avatar-wrap {
   position: relative;
-  width: 125px;
-  height: 125px;
+  width: 135px;
+  height: 135px;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  border: 2px solid transparent;
-  transition: border-color var(--transition-fast), transform var(--transition-fast);
+  border: 3px solid transparent;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  transition: border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, border-color;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
 }
 
 .profile-card:hover .profile-avatar-wrap {
-  border-color: var(--text-primary);
-  transform: scale(1.05);
+  border-color: #FFFFFF;
+  transform: scale3d(1.08, 1.08, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9);
+}
+
+.profile-card:active .profile-avatar-wrap {
+  transform: scale3d(0.98, 0.98, 1);
 }
 
 .profile-avatar-img {
@@ -1895,4 +1914,612 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-primary);
   font-weight: 700;
   font-family: monospace;
+}
+
+/* ==========================================================================
+   Top 10 Cinematic Rank Cards (Netflix-Style Giant Numbers)
+   ========================================================================== */
+.top10-card {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-width: 250px;
+  cursor: pointer;
+}
+.top10-rank-num {
+  font-size: 130px;
+  font-weight: 900;
+  line-height: 0.8;
+  font-family: 'Impact', -apple-system, sans-serif;
+  color: #000000;
+  -webkit-text-stroke: 4px #555555;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+  margin-right: -24px;
+  z-index: 1;
+  user-select: none;
+  transition: -webkit-text-stroke var(--transition-fast);
+}
+.top10-card:hover .top10-rank-num {
+  -webkit-text-stroke: 4px #ffffff;
+}
+.top10-card .card-poster-wrap {
+  width: 155px;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   Search Instant Suggestions Panel
+   ========================================================================== */
+.search-suggestions-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 340px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.95);
+  z-index: 1000;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.suggestion-item:hover {
+  background: var(--bg-card);
+}
+.suggestion-thumb {
+  width: 36px;
+  height: 52px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+.suggestion-info {
+  flex: 1;
+  overflow: hidden;
+}
+.suggestion-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.suggestion-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Notifications Center
+   ========================================================================== */
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 340px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.95);
+  z-index: 1000;
+}
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.notifications-header h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.btn-text-subtle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+.btn-text-subtle:hover {
+  color: var(--text-primary);
+}
+.notifications-list {
+  max-height: 340px;
+  overflow-y: auto;
+}
+.notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.notification-item.unread {
+  background: rgba(255,255,255,0.04);
+}
+.notification-item:hover {
+  background: var(--bg-card);
+}
+.notif-icon {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+.notif-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.notif-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   Filter Chips Scroll Container
+   ========================================================================== */
+.chips-scroll-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.chips-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+.filter-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.filter-chip:hover, .filter-chip.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Coming Soon Hero & Release Cards
+   ========================================================================== */
+.comingsoon-hero-spotlight {
+  position: relative;
+  min-height: 440px;
+  display: flex;
+  align-items: flex-end;
+  padding: 50px 48px;
+  margin-bottom: 32px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+.comingsoon-hero-backdrop-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.comingsoon-hero-backdrop {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.45;
+  filter: contrast(1.1);
+}
+.comingsoon-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 650px;
+}
+.comingsoon-hero-title {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 12px 0 16px 0;
+  color: var(--text-primary);
+}
+.comingsoon-countdown-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.countdown-pill {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-notify-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+  transition: all var(--transition-fast);
+}
+.card-notify-btn:hover, .card-notify-btn.notified {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+/* ==========================================================================
+   Discover Movie Roulette
+   ========================================================================== */
+.discover-roulette-card {
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-primary) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 40px;
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+}
+.roulette-content h2 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 12px 0 8px 0;
+  color: var(--text-primary);
+}
+.roulette-content p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 520px;
+  margin: 0 auto 24px auto;
+}
+.roulette-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+.roulette-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+.roulette-result-box {
+  margin-top: 28px;
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: left;
+}
+
+/* ==========================================================================
+   Admin Dashboard Layout
+   ========================================================================== */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 24px 0 36px 0;
+}
+.admin-stat-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+}
+.stat-num {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--text-primary);
+  font-family: monospace;
+}
+.stat-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.admin-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+.admin-action-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.admin-action-box h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.admin-action-box p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.audit-log-table-wrapper {
+  overflow-x: auto;
+  margin-top: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.audit-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.audit-log-table th {
+  background: var(--bg-elevated);
+  padding: 12px 16px;
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-strong);
+}
+.audit-log-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Help & Support Center
+   ========================================================================== */
+.help-grid-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+}
+@media (max-width: 900px) {
+  .help-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.faq-item {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 14px 0;
+}
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.faq-answer {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-top: 10px;
+  display: none;
+}
+.faq-item.open .faq-answer {
+  display: block;
+}
+.faq-item.open .faq-question i {
+  transform: rotate(180deg);
+}
+.support-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+}
+
+/* ==========================================================================
+   Community Ratings & Reviews
+   ========================================================================== */
+.review-composer-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+}
+.rating-stars-picker {
+  display: flex;
+  align-items: center;
+}
+.stars-row {
+  display: flex;
+  gap: 4px;
+  margin-left: 10px;
+}
+.star-btn {
+  font-size: 16px;
+  color: var(--border-strong);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+.star-btn.active, .star-btn:hover {
+  color: var(--text-primary);
+}
+.star-rating-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.review-card-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 12px;
+}
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.review-author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.review-author-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
+.review-author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.review-content {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.review-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.btn-helpful {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+.btn-helpful:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Video Player Timeline Scrubber
+   ========================================================================== */
+.player-timeline-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+  right: 24px;
+  background: rgba(8, 8, 8, 0.88);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+.player-scrubber-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border-strong);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.player-scrubber-progress {
+  height: 100%;
+  width: 0%;
+  background: #ffffff;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.player-time-label {
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 45px;
+}
+
+/* Premiere Banner for Unreleased Titles */
+.player-upcoming-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  z-index: 15;
 }
