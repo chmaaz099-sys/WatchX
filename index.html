@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>WatchX - The Ultimate Movie Streaming Platform</title>
+  
+  <meta name="description" content="WatchX - Stream 10,000+ movies, TV series, anime, and documentaries in cinematic 1080p and 4K Ultra HD. Pure black monochrome luxury.">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Strict Content Security Policy: Authorizes video streams & YouTube NoCookie while preventing rogue ad injections -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-src 'self' https://vidlink.pro https://*.vidlink.pro https://vidsrc.cc https://*.vidsrc.cc https://embed.su https://*.embed.su https://player.autoembed.cc https://*.autoembed.cc https://www.2embed.cc https://*.2embed.cc https://www.youtube-nocookie.com https://www.youtube.com blob: data:; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; connect-src 'self' https: wss:;">
+
+  <!-- Preconnect & DNS-Prefetch for Speed -->
+  <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+  <link rel="dns-prefetch" href="https://image.tmdb.org">
+  <link rel="preconnect" href="https://db.wecollege.net" crossorigin>
+  <link rel="dns-prefetch" href="https://db.wecollege.net">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Supabase JS Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Main Pure Black Monochrome Stylesheet -->
+  <link rel="stylesheet" href="css/style.css?v=20">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       Header Navigation (Pure Black Monochrome)
+       ========================================================================== -->
+  <header class="header" id="main-header">
+    <div class="header-left">
+      <a href="#" class="logo-brand" id="brand-logo">
+        WATCHX <span class="logo-badge">CINEMA</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-link active" data-tab="home">Home</a></li>
+        <li><a href="#" class="nav-link" data-tab="movies">Movies</a></li>
+        <li><a href="#" class="nav-link" data-tab="tv">TV Shows</a></li>
+        <li><a href="#" class="nav-link" data-tab="categories">Categories</a></li>
+        <li><a href="#" class="nav-link" data-tab="mylist">My List</a></li>
+      </ul>
+    </div>
+
+    <div class="header-right">
+      <!-- Search Input -->
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="header-search-input" placeholder="Search titles, actors, genres... (/)" autocomplete="off">
+      </div>
+
+      <!-- Sound Effects Toggle Button -->
+      <button class="header-icon-btn" id="sound-toggle-btn" title="Toggle Sound FX (M)">
+        <i class="fas fa-volume-xmark"></i>
+      </button>
+
+      <!-- Keyboard Shortcuts Help Button -->
+      <button class="header-icon-btn" id="shortcuts-btn" title="Keyboard Shortcuts (?)">
+        <i class="fas fa-keyboard"></i>
+      </button>
+
+      <!-- User Profile Avatar & Dropdown -->
+      <div class="profile-menu-wrapper">
+        <button class="user-profile-btn" id="header-profile-btn" title="Profile & Account">
+          <img class="user-avatar" id="header-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar">
+        </button>
+
+        <div class="profile-dropdown" id="profile-dropdown-menu">
+          <div class="dropdown-user-header">
+            <img class="dropdown-avatar" id="dropdown-profile-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar">
+            <div class="dropdown-user-info">
+              <span class="dropdown-name" id="dropdown-profile-name">Primary</span>
+              <span class="dropdown-status" id="dropdown-user-email">VIP Member</span>
+            </div>
+          </div>
+          <div class="dropdown-items">
+            <button class="dropdown-item" id="menu-switch-profile">
+              <i class="fas fa-users"></i> Switch Profile
+            </button>
+            <button class="dropdown-item" id="menu-manage-profiles">
+              <i class="fas fa-user-pen"></i> Manage Profiles
+            </button>
+            <button class="dropdown-item" id="menu-account-settings">
+              <i class="fas fa-sliders"></i> Account & Settings
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="menu-sign-out">
+              <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       Home View
+       ========================================================================== -->
+  <div class="view-pane" id="home-view">
+    <!-- Hero Spotlight Section -->
+    <section class="hero-spotlight" id="hero-spotlight">
+      <div class="spotlight-backdrop-container">
+        <img id="spotlight-bg" class="spotlight-backdrop" src="" alt="Spotlight Banner">
+        <div class="spotlight-vignette"></div>
+      </div>
+
+      <div class="spotlight-content">
+        <div class="spotlight-badge">
+          <i class="fas fa-film"></i> WATCHX FEATURED
+        </div>
+        <h1 class="spotlight-title" id="spotlight-title">Loading Featured Title...</h1>
+        
+        <div class="spotlight-meta">
+          <span class="meta-pill" id="spotlight-match">98% Match</span>
+          <span class="meta-pill" id="spotlight-year">2024</span>
+          <span class="meta-pill" id="spotlight-rating">16+</span>
+          <span class="meta-pill" id="spotlight-duration">1080p FHD</span>
+          <span class="meta-pill"><i class="fas fa-check"></i> Cinema Master</span>
+        </div>
+
+        <p class="spotlight-desc" id="spotlight-desc">Discover top blockbusters and trending stories streaming now on WatchX.</p>
+
+        <div class="spotlight-actions">
+          <button class="btn-primary-white" id="spotlight-play">
+            <i class="fas fa-play"></i> Watch Now
+          </button>
+          <button class="btn-secondary-dark" id="spotlight-info">
+            <i class="fas fa-circle-info"></i> More Info
+          </button>
+          <button class="btn-secondary-dark" id="spotlight-list">
+            <i class="fas fa-plus"></i> My List
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content Carousels Container -->
+    <main class="main-content" id="main-content">
+      <div id="carousel-rows-container">
+        <div class="player-spinner" style="height: 300px;">
+          <div class="spinner-icon"></div>
+          <span>Loading WatchX catalog...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==========================================================================
+       Catalog View (10,000+ Movies & TV Series)
+       ========================================================================== -->
+  <section class="catalog-view" id="catalog-view" style="display: none;">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <h2 id="catalog-main-title">10,000+ Movies Catalog</h2>
+        <span class="catalog-counter" id="catalog-count">Showing verified cinema titles</span>
+      </div>
+
+      <!-- Filter Toolbar -->
+      <div class="filter-toolbar">
+        <div class="filter-item">
+          <label><i class="fas fa-layer-group"></i> Genre</label>
+          <select id="catalog-genre-filter">
+            <option value="">All Genres</option>
+            <option value="28">Action</option>
+            <option value="12">Adventure</option>
+            <option value="16">Animation</option>
+            <option value="35">Comedy</option>
+            <option value="80">Crime</option>
+            <option value="99">Documentary</option>
+            <option value="18">Drama</option>
+            <option value="10751">Family</option>
+            <option value="14">Fantasy</option>
+            <option value="36">History</option>
+            <option value="27">Horror</option>
+            <option value="10402">Music</option>
+            <option value="9648">Mystery</option>
+            <option value="10749">Romance</option>
+            <option value="878">Sci-Fi</option>
+            <option value="53">Thriller</option>
+            <option value="10752">War</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label><i class="fas fa-calendar"></i> Year</label>
+          <select id="catalog-year-filter">
+            <option value="">All Years</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2018">2018</option>
+            <option value="2015">2015</option>
+            <option value="2010">2010</option>
+            <option value="2000">2000</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label><i class="fas fa-arrow-down-wide-short"></i> Sort</label>
+          <select id="catalog-sort-filter">
+            <option value="popularity.desc">Most Popular</option>
+            <option value="vote_average.desc">Highest Rated</option>
+            <option value="primary_release_date.desc">Newest Releases</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Grid -->
+    <div class="media-grid" id="catalog-grid"></div>
+
+    <!-- Pagination Footer -->
+    <div class="pagination-footer">
+      <button class="btn-secondary-dark" id="catalog-loadmore">
+        Load More Titles (+20)
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       Categories View
+       ========================================================================== -->
+  <section class="catalog-view" id="categories-view" style="display: none;">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <h2>Categories & Genres</h2>
+        <span class="catalog-counter">Browse by genre and theme</span>
+      </div>
+    </div>
+    <div class="media-grid" id="categories-grid"></div>
+  </section>
+
+  <!-- ==========================================================================
+       My List (Personal Watchlist) View
+       ========================================================================== -->
+  <section class="catalog-view" id="mylist-view" style="display: none;">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <h2>My List</h2>
+        <span class="catalog-counter" id="mylist-count">0 Titles Saved</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item">
+          <button class="btn-secondary-dark active-chip" id="mylist-filter-all">All</button>
+          <button class="btn-secondary-dark" id="mylist-filter-movies">Movies</button>
+          <button class="btn-secondary-dark" id="mylist-filter-tv">TV Shows</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="mylist-grid"></div>
+    <div id="mylist-empty-state" style="display: none; text-align: center; padding: 60px 0;">
+      <i class="fas fa-bookmark" style="font-size: 40px; color: var(--text-muted); margin-bottom: 16px;"></i>
+      <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Your Watchlist is Empty</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">Add movies and series to your personal watchlist to watch them anytime.</p>
+      <button class="btn-primary-white" onclick="document.querySelector('.nav-link[data-tab=\'movies\']').click();">
+        Explore 10,000+ Movies
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       Dedicated Search View
+       ========================================================================== -->
+  <section class="catalog-view" id="search-view" style="display: none;">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <h2>Search WatchX</h2>
+      </div>
+      <div class="search-recent-box" style="margin-bottom: 16px;">
+        <span style="font-size: 13px; color: var(--text-muted); margin-right: 10px;">Recent:</span>
+        <span id="search-recent-chips-container"></span>
+      </div>
+    </div>
+    <div class="media-grid" id="search-results-grid"></div>
+  </section>
+
+  <!-- ==========================================================================
+       Settings Dashboard View
+       ========================================================================== -->
+  <section class="settings-view" id="settings-view" style="display: none;">
+    <div class="settings-header">
+      <h2>Account & System Settings</h2>
+    </div>
+
+    <div class="settings-layout">
+      <!-- Left Navigation -->
+      <div class="settings-nav">
+        <button class="settings-tab-btn active" data-pane="account">
+          <i class="fas fa-user-shield"></i> Account
+        </button>
+        <button class="settings-tab-btn" data-pane="profile">
+          <i class="fas fa-id-card"></i> Profile & PIN
+        </button>
+        <button class="settings-tab-btn" data-pane="preferences">
+          <i class="fas fa-palette"></i> Preferences
+        </button>
+        <button class="settings-tab-btn" data-pane="privacy">
+          <i class="fas fa-clock-rotate-left"></i> Privacy & History
+        </button>
+        <button class="settings-tab-btn" data-pane="cloud">
+          <i class="fas fa-cloud"></i> Supabase Cloud Sync
+        </button>
+      </div>
+
+      <!-- Right Tab Content -->
+      <div class="settings-content">
+        <!-- 1. Account Tab -->
+        <div class="settings-tab-pane active" id="pane-account">
+          <h3 class="settings-section-title">Account Information</h3>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Email Address</div>
+              <div class="settings-row-desc" id="settings-account-email">member@watchx.stream</div>
+            </div>
+            <button class="btn-secondary-dark" id="settings-signout-btn">Sign Out</button>
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Google Account Connection</div>
+              <div class="settings-row-desc" id="settings-google-status">Ready for Google OAuth login</div>
+            </div>
+            <button class="btn-secondary-dark btn-google-auth">
+              <i class="fab fa-google"></i> Connect Google
+            </button>
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Password & Authentication</div>
+              <div class="settings-row-desc">Manage account password and security credentials</div>
+            </div>
+            <button class="btn-secondary-dark" id="settings-reset-pw-btn">Reset Password</button>
+          </div>
+        </div>
+
+        <!-- 2. Profile & PIN Tab -->
+        <div class="settings-tab-pane" id="pane-profile">
+          <h3 class="settings-section-title">Active Profile Settings</h3>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Profile Name</div>
+              <div class="settings-row-desc" id="settings-profile-name-desc">Primary</div>
+            </div>
+            <button class="btn-secondary-dark" id="settings-edit-profile-btn">Edit Profile</button>
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">4-Digit Security PIN</div>
+              <div class="settings-row-desc" id="settings-pin-status">Disabled</div>
+            </div>
+            <button class="btn-secondary-dark" id="settings-manage-pin-btn">Configure PIN</button>
+          </div>
+        </div>
+
+        <!-- 3. Preferences Tab -->
+        <div class="settings-tab-pane" id="pane-preferences">
+          <h3 class="settings-section-title">Streaming, Hardware & Appearance Preferences</h3>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Design Theme</div>
+              <div class="settings-row-desc">Strict Pure Black Monochrome Cinema</div>
+            </div>
+            <span class="meta-pill"><i class="fas fa-check"></i> Pure Black Active</span>
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">240Hz Extreme Performance Engine</div>
+              <div class="settings-row-desc">High refresh rate support (60Hz, 120Hz, 144Hz, 165Hz, 240Hz) with live HUD (Shift+F)</div>
+            </div>
+            <input type="checkbox" id="settings-fps-toggle" style="width: 20px; height: 20px;">
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Malicious Ad & Redirect Shield</div>
+              <div class="settings-row-desc">Blocks popunders, fake CAPTCHAs, top-level redirects, and untrusted scripts</div>
+            </div>
+            <span class="meta-pill"><i class="fas fa-shield-halved"></i> Active · Strict Sandbox</span>
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Sound Effects (Web Audio Synthesizer)</div>
+              <div class="settings-row-desc">Cinematic 'Ta-Dum' acoustic feedback on navigation</div>
+            </div>
+            <input type="checkbox" id="settings-sound-toggle" style="width: 20px; height: 20px;">
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Default Playback Quality</div>
+              <div class="settings-row-desc">1080p Full HD Cinema Bitrate (4K Ultra HD on supported titles)</div>
+            </div>
+            <span class="meta-pill">1080p Full HD</span>
+          </div>
+        </div>
+
+        <!-- 4. Privacy & History Tab -->
+        <div class="settings-tab-pane" id="pane-privacy">
+          <h3 class="settings-section-title">Privacy & Viewing Controls</h3>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Clear Watch History</div>
+              <div class="settings-row-desc">Permanently erase Continue Watching data for this profile</div>
+            </div>
+            <button class="btn-delete-profile" id="settings-clear-history-btn">Clear History</button>
+          </div>
+          <div class="settings-row-item">
+            <div>
+              <div class="settings-row-label">Clear Search History</div>
+              <div class="settings-row-desc">Remove saved recent search terms</div>
+            </div>
+            <button class="btn-delete-profile" id="settings-clear-searches-btn">Clear Searches</button>
+          </div>
+        </div>
+
+        <!-- 5. Supabase Cloud Sync Tab -->
+        <div class="settings-tab-pane" id="pane-cloud">
+          <h3 class="settings-section-title">Supabase PostgreSQL Cloud Backend</h3>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+            Connect your personal Supabase project to synchronize profiles, watchlists, watch progress, and Google OAuth credentials in real-time across all your devices.
+          </p>
+
+          <div class="form-group">
+            <label for="cloud-supabase-url">Supabase Project URL</label>
+            <input type="text" id="cloud-supabase-url" placeholder="https://xyzcompany.supabase.co" style="width: 100%;">
+          </div>
+
+          <div class="form-group">
+            <label for="cloud-supabase-key">Supabase Anon Key</label>
+            <input type="password" id="cloud-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="width: 100%;">
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn-primary-white" id="cloud-test-btn">
+              <i class="fas fa-plug"></i> Test Connection
+            </button>
+            <button class="btn-secondary-dark" id="cloud-save-btn">
+              <i class="fas fa-save"></i> Save Credentials
+            </button>
+          </div>
+
+          <div id="cloud-status-msg" style="margin-top: 16px; font-size: 13px; display: none;"></div>
+
+          <div style="margin-top: 32px; padding: 18px; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+            <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px;"><i class="fas fa-database"></i> Database Schema:</div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+              The complete PostgreSQL schema with Row Level Security (RLS) is located at <code>supabase-schema.sql</code>. Copy its contents into the Supabase SQL Editor to initialize all tables with one click!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       Who's Watching? Netflix-Style Profile Screen
+       ========================================================================== -->
+  <div class="profiles-screen" id="profiles-screen">
+    <h1 class="profiles-title">Who's Watching?</h1>
+    <div class="profiles-grid" id="profiles-grid"></div>
+    <button class="btn-manage-profiles" id="manage-profiles-btn">Manage Profiles</button>
+  </div>
+
+  <!-- ==========================================================================
+       4-Digit Profile PIN Entry Modal
+       ========================================================================== -->
+  <div class="modal-backdrop" id="pin-entry-modal">
+    <div class="pin-modal-card">
+      <button class="modal-close-icon" id="pin-modal-close" aria-label="Close PIN"><i class="fas fa-times"></i></button>
+      <img class="pin-avatar-thumb" id="pin-modal-profile-avatar" src="" alt="Avatar">
+      <h3 class="pin-modal-title">Enter Profile PIN</h3>
+      <p class="pin-modal-subtitle" id="pin-modal-profile-name">Primary Profile is protected</p>
+
+      <div class="pin-input-group">
+        <input type="password" class="pin-digit-input" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input type="password" class="pin-digit-input" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input type="password" class="pin-digit-input" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input type="password" class="pin-digit-input" maxlength="1" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <div class="pin-error-text" id="pin-modal-error"></div>
+
+      <!-- Virtual On-Screen Keypad -->
+      <div class="pin-keypad">
+        <button class="pin-key-btn" data-key="1">1</button>
+        <button class="pin-key-btn" data-key="2">2</button>
+        <button class="pin-key-btn" data-key="3">3</button>
+        <button class="pin-key-btn" data-key="4">4</button>
+        <button class="pin-key-btn" data-key="5">5</button>
+        <button class="pin-key-btn" data-key="6">6</button>
+        <button class="pin-key-btn" data-key="7">7</button>
+        <button class="pin-key-btn" data-key="8">8</button>
+        <button class="pin-key-btn" data-key="9">9</button>
+        <button class="pin-key-btn" data-key="clear" style="font-size: 13px;">Clear</button>
+        <button class="pin-key-btn" data-key="0">0</button>
+        <button class="pin-key-btn" data-key="back"><i class="fas fa-delete-left"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Profile Editor Modal (Create, Edit, PIN Toggle, Avatar Picker)
+       ========================================================================== -->
+  <div class="modal-backdrop" id="profile-edit-modal">
+    <div class="editor-modal-card">
+      <button class="modal-close-icon" id="edit-profile-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
+      <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 20px;" id="profile-edit-title">Edit Profile</h3>
+
+      <div class="editor-header">
+        <img class="editor-avatar-preview" id="edit-avatar-preview" src="" alt="Avatar">
+        <div style="flex: 1;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="edit-profile-name">Profile Name</label>
+            <input type="text" id="edit-profile-name" placeholder="Enter profile name" style="width: 100%;">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Select Profile Avatar</label>
+        <div class="avatar-grid" id="avatar-picker-grid"></div>
+        <div style="margin-top: 8px;">
+          <label for="avatar-file-upload" style="cursor: pointer; font-size: 12px; color: var(--text-primary); text-decoration: underline;">
+            <i class="fas fa-upload"></i> Or upload custom profile photo (PNG/JPG)
+          </label>
+          <input type="file" id="avatar-file-upload" accept="image/*" style="display: none;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="edit-profile-kids" style="width: 18px; height: 18px;">
+          <span>Kids Profile (Friendly, PG content only)</span>
+        </label>
+      </div>
+
+      <div class="form-group" style="border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+        <label class="checkbox-label">
+          <input type="checkbox" id="edit-pin-toggle" style="width: 18px; height: 18px;">
+          <span>Require 4-digit PIN to access this profile</span>
+        </label>
+        <div id="edit-pin-group" style="display: none; margin-top: 12px;">
+          <input type="password" id="edit-profile-pin" maxlength="4" placeholder="Enter 4-digit PIN" style="width: 140px; text-align: center; letter-spacing: 4px; font-size: 18px;">
+        </div>
+      </div>
+
+      <div class="editor-actions">
+        <button class="btn-delete-profile" id="edit-profile-delete-btn">Delete Profile</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-secondary-dark" id="edit-profile-cancel-btn">Cancel</button>
+          <button class="btn-primary-white" id="edit-profile-save-btn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Authentication Modal (Sign In / Sign Up / Google OAuth)
+       ========================================================================== -->
+  <div class="modal-backdrop" id="auth-modal">
+    <div class="auth-modal-card">
+      <button class="modal-close-icon" id="auth-modal-close" aria-label="Close"><i class="fas fa-times"></i></button>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" data-mode="signin">Sign In</button>
+        <button class="auth-tab-btn" data-mode="signup">Create Account</button>
+      </div>
+
+      <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; text-align: center;" id="auth-modal-title">Sign In to WatchX</h3>
+
+      <button class="btn-google-auth">
+        <i class="fab fa-google"></i> Continue with Google
+      </button>
+
+      <div class="auth-divider">or continue with email</div>
+
+      <form id="auth-form" data-mode="signin">
+        <div class="form-group" id="auth-name-group" style="display: none;">
+          <label for="auth-name">Full Name</label>
+          <input type="text" id="auth-name" placeholder="John Doe" style="width: 100%;">
+        </div>
+
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" placeholder="name@example.com" required style="width: 100%;">
+        </div>
+
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" required style="width: 100%;">
+        </div>
+
+        <div id="auth-error-msg" style="color: var(--text-secondary); font-size: 12px; margin-bottom: 14px; display: none;"></div>
+
+        <button type="submit" class="btn-primary-white btn-auth-submit" style="width: 100%;">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Movie & TV Show Details Modal
+       ========================================================================== -->
+  <div class="detail-modal" id="detail-modal">
+    <div class="detail-modal-card">
+      <button class="modal-close-icon" id="detail-modal-close" aria-label="Close"><i class="fas fa-times"></i></button>
+
+      <div class="detail-hero">
+        <img class="detail-backdrop-img" id="detail-backdrop" src="" alt="Backdrop">
+        <div class="detail-hero-vignette"></div>
+        <div class="detail-hero-content">
+          <h2 class="detail-title" id="detail-title">Title</h2>
+          <div class="detail-actions">
+            <button class="btn-primary-white" id="detail-play-btn">
+              <i class="fas fa-play"></i> Watch Now
+            </button>
+            <button class="btn-secondary-dark" id="detail-list-btn">
+              <i class="fas fa-plus"></i> My List
+            </button>
+            <button class="btn-secondary-dark" id="detail-trailer-btn" style="display: none;">
+              <i class="fas fa-film"></i> Official Trailer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-body">
+        <div class="detail-grid">
+          <div>
+            <div class="detail-meta-row">
+              <span class="meta-pill" id="detail-match">98% Match</span>
+              <span id="detail-year" style="color: var(--text-secondary);">2024</span>
+              <span class="meta-pill">16+</span>
+              <span class="meta-pill">1080p FHD</span>
+              <span class="meta-pill">5.1 Audio</span>
+            </div>
+            <p class="detail-overview" id="detail-overview"></p>
+          </div>
+          <div class="detail-side-meta">
+            <div id="detail-cast" style="margin-bottom: 12px;"></div>
+            <div id="detail-genres"></div>
+          </div>
+        </div>
+
+        <!-- TV Show Episodes Section -->
+        <div class="episodes-section" id="detail-episodes-section" style="display: none;">
+          <div class="episodes-header">
+            <h3>Episodes</h3>
+            <select id="detail-season-select" aria-label="Select Season"></select>
+          </div>
+          <div id="detail-episodes-list"></div>
+        </div>
+
+        <!-- Similar Recommendations Section -->
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 18px;">More Like This</h3>
+          <div class="media-grid" id="detail-similar-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Ultra-Clean Cinema Video Player
+       NO PROVIDER BADGES, NO LATENCY PILLS
+       ========================================================================== -->
+  <div class="player-modal" id="player-modal">
+    <div class="player-header">
+      <div class="player-header-left">
+        <button class="player-back-btn" id="player-close-btn" title="Back to WatchX (Esc)">
+          <i class="fas fa-arrow-left"></i> <span>Back</span>
+        </button>
+        <div class="player-title-info">
+          <span class="player-title" id="player-title">Movie Title</span>
+          <span class="player-subtitle" id="player-subtitle">Movie (2024)</span>
+        </div>
+      </div>
+
+      <div class="player-header-right">
+        <!-- TV Episode Controls -->
+        <div class="player-ep-controls" id="player-episode-controls" style="display: none;">
+          <button class="player-ep-btn" id="player-prev-ep" title="Previous Episode (P)"><i class="fas fa-step-backward"></i> Prev</button>
+          <button class="player-ep-btn" id="player-next-ep" title="Next Episode (N)">Next <i class="fas fa-step-forward"></i></button>
+        </div>
+
+        <!-- Silent Stream Switcher (Discreet source rotation without technical names) -->
+        <button class="player-ep-btn" id="player-switch-stream-btn" title="Switch Stream Server" style="display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fas fa-rotate"></i> <span id="player-stream-label">Server 1</span>
+        </button>
+
+        <button class="player-icon-btn" id="player-fullscreen-btn" title="Fullscreen (F)">
+          <i class="fas fa-expand"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Precision Resume Toast -->
+    <div class="player-resume-toast" id="player-resume-toast" style="display: none;"></div>
+
+    <div class="player-container">
+      <div class="player-spinner" id="player-spinner">
+        <div class="spinner-icon"></div>
+        <span>Buffering WatchX stream...</span>
+      </div>
+      <iframe id="player-iframe" class="player-iframe" loading="eager" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Keyboard Shortcuts Help Modal
+       ========================================================================== -->
+  <div class="modal-backdrop" id="shortcuts-modal">
+    <div class="pin-modal-card" style="max-width: 460px; text-align: left;">
+      <button class="modal-close-icon" id="shortcuts-close-btn" aria-label="Close"><i class="fas fa-times"></i></button>
+      <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 18px;"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+      <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">/</kbd> <span>Focus Search</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">Space</kbd> <span>Play Spotlight Title</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">F</kbd> <span>Toggle Fullscreen</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">Shift + F</kbd> <span>Toggle 240Hz Performance HUD</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">M</kbd> <span>Mute / Unmute Audio FX</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">N</kbd> <span>Next Episode (TV)</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">P</kbd> <span>Previous Episode (TV)</span></div>
+        <div style="display: flex; justify-content: space-between;"><kbd style="background: var(--bg-secondary); border: 1px solid var(--border-strong); padding: 2px 8px; border-radius: 4px;">Esc</kbd> <span>Close Player or Modal</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 240Hz High Refresh Rate Performance Monitor (Toggle via Shift+F or Preferences) -->
+  <div id="performance-hud" class="performance-hud" style="display: none;">
+    <div class="hud-header">
+      <span class="hud-title"><i class="fas fa-gauge-high"></i> WATCHX ENGINE</span>
+      <span class="hud-close" id="hud-close-btn">&times;</span>
+    </div>
+    <div class="hud-stats">
+      <div class="hud-stat-item">
+        <span class="hud-label">FRAME RATE</span>
+        <span class="hud-value" id="hud-fps">-- FPS</span>
+      </div>
+      <div class="hud-stat-item">
+        <span class="hud-label">FRAME TIME</span>
+        <span class="hud-value" id="hud-frametime">-- ms</span>
+      </div>
+      <div class="hud-stat-item">
+        <span class="hud-label">DISPLAY REFRESH</span>
+        <span class="hud-value" id="hud-refreshrate">-- Hz</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Bar -->
+  <nav class="mobile-nav-bar">
+    <a href="#" class="mobile-nav-item active" data-tab="home">
+      <i class="fas fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="#" class="mobile-nav-item" data-tab="movies">
+      <i class="fas fa-film"></i>
+      <span>Movies</span>
+    </a>
+    <a href="#" class="mobile-nav-item" data-tab="tv">
+      <i class="fas fa-tv"></i>
+      <span>TV</span>
+    </a>
+    <a href="#" class="mobile-nav-item" data-tab="categories">
+      <i class="fas fa-layer-group"></i>
+      <span>Categories</span>
+    </a>
+    <a href="#" class="mobile-nav-item" data-tab="mylist">
+      <i class="fas fa-bookmark"></i>
+      <span>My List</span>
+    </a>
+  </nav>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="#" onclick="document.querySelector('.nav-link[data-tab=\'movies\']').click(); return false;">10,000+ Movies Catalog</a>
+      <a href="#" onclick="document.querySelector('.nav-link[data-tab=\'tv\']').click(); return false;">TV Series</a>
+      <a href="#" onclick="document.querySelector('.nav-link[data-tab=\'categories\']').click(); return false;">Categories</a>
+      <a href="#" onclick="window.dispatchEvent(new CustomEvent('watchx:navigate', {detail: 'settings'})); return false;">Account Settings</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+    <div class="footer-copy">
+      &copy; 2026 WatchX Cinema. The Ultimate Pure Black Streaming Platform.
+    </div>
+  </footer>
+
+  <!-- Core App Controller -->
+  <script type="module" src="js/app.js?v=20"></script>
+</body>
+</html>
