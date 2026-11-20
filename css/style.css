@@ -2740,3 +2740,237 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-muted);
   line-height: 1.5;
 }
+
+/* ==========================================================================
+   Brand Identity & SVG Logo Mark
+   ========================================================================== */
+.brand-logo-mark {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.25s ease;
+  flex-shrink: 0;
+}
+.logo-brand:hover .brand-logo-mark {
+  transform: rotate(8deg) scale(1.08);
+}
+.logo-text {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+}
+.logo-x {
+  color: #ffffff;
+  border-bottom: 2px solid #ffffff;
+  padding-bottom: 1px;
+}
+
+/* ==========================================================================
+   Hero Carousel Controls & Ken Burns Effect
+   ========================================================================== */
+.spotlight-backdrop {
+  transition: transform 8s ease-out, opacity 0.8s ease-in-out;
+}
+.hero-spotlight:hover .spotlight-backdrop {
+  transform: scale(1.03);
+}
+.hero-carousel-controls {
+  position: absolute;
+  bottom: 28px;
+  right: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 12;
+  background: rgba(14, 14, 14, 0.78);
+  border: 1px solid var(--border-strong);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(12px);
+}
+.hero-nav-arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #141414;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-subtle);
+}
+.hero-nav-arrow:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: scale(1.1);
+}
+.hero-progress-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.hero-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.hero-dot.active {
+  width: 20px;
+  border-radius: 4px;
+  background: #ffffff;
+}
+.hero-pause-toggle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: color var(--transition-fast);
+}
+.hero-pause-toggle:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Skeleton Loading Shimmer
+   ========================================================================== */
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-card {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, #0d0d0d 25%, #1c1c1c 50%, #0d0d0d 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s infinite ease-in-out;
+  border: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   Enhanced Poster Card Hover Overlay & Micro-Actions
+   ========================================================================== */
+.media-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 2/3;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.media-card:hover {
+  transform: scale(1.04) translateY(-4px);
+  border-color: #ffffff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9);
+  z-index: 5;
+}
+.media-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.1) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 14px;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.media-card:hover .media-card-overlay {
+  opacity: 1;
+}
+.card-quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.card-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+.card-action-btn.play {
+  background: #ffffff;
+  color: #000000;
+}
+.card-action-btn.play:hover {
+  transform: scale(1.15);
+}
+.card-action-btn.add {
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid var(--border-strong);
+  color: #ffffff;
+}
+.card-action-btn.add:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: scale(1.15);
+}
+
+/* ==========================================================================
+   Smooth Carousel Chevron Arrows & Edge Fade Gradients
+   ========================================================================== */
+.carousel-track-wrapper {
+  position: relative;
+  width: 100%;
+}
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--border-strong);
+  color: #ffffff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+.carousel-track-wrapper:hover .carousel-arrow {
+  opacity: 1;
+}
+.carousel-arrow.prev {
+  left: 0;
+  border-radius: 0 6px 6px 0;
+}
+.carousel-arrow.next {
+  right: 0;
+  border-radius: 6px 0 0 6px;
+}
+.carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-50%) scale(1.06);
+}
+
+/* ==========================================================================
+   Accessibility & Reduced Motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

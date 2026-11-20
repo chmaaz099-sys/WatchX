@@ -10,10 +10,10 @@
  * - Clutter-Free Cinema Player (Zero technical badges or provider spam)
  */
 
-import * as api from './api.js?v=28';
-import { player } from './player.js?v=28';
-import { dbClient } from './supabase-client.js?v=28';
-import { authManager } from './auth.js?v=28';
+import * as api from './api.js?v=31';
+import { player } from './player.js?v=31';
+import { dbClient } from './supabase-client.js?v=31';
+import { authManager } from './auth.js?v=31';
 
 // Global App State
 const state = {
@@ -21,6 +21,7 @@ const state = {
   spotlightItems: [],
   currentSpotlightIndex: 0,
   spotlightTimer: null,
+  spotlightPaused: false,
   activeDetailMedia: null,
   activeDetailFullData: null,
   searchTimeout: null,
@@ -268,6 +269,7 @@ async function initApp() {
   await authManager.init();
   setupNavigation();
   setupHeaderControls();
+  setupHeroCarouselControls();
   setupDetailModal();
   setupSettingsView();
   setupShortcuts();
@@ -354,6 +356,10 @@ function switchTab(tabName) {
     case 'anime':
       document.getElementById('anime-view').style.display = 'block';
       loadAnimeView();
+      break;
+    case 'freetowatch':
+      document.getElementById('freetowatch-view').style.display = 'block';
+      loadFreeToWatchView();
       break;
     case 'year2026':
       document.getElementById('year2026-view').style.display = 'block';
@@ -527,7 +533,15 @@ async function loadHomeContent() {
     // 4. Trending Now
     appendContentRow(container, 'Trending Worldwide', trending);
 
-    // 5. Netflix Originals Showcase
+    // 5. Free to Watch in 1080p (Internet Archive, Public Domain, Official Distributors - 0% Ads)
+    try {
+      const freeMovies = await api.getFreeToWatchCollection({ genre: 'all' });
+      if (freeMovies?.items && freeMovies.items.length > 0) {
+        appendContentRow(container, 'Free to Watch in 1080p (100% Legal & Ad-Free)', freeMovies.items);
+      }
+    } catch (e) {}
+
+    // 6. Netflix Originals Showcase
     try {
       const netflixItems = await api.getNetflixCatalog({ type: 'all', page: 1 });
       if (netflixItems && netflixItems.length > 0) {
@@ -578,6 +592,28 @@ async function loadHomeContent() {
       const fourK = await api.get4KCuratedMovies(1);
       if (fourK && fourK.length > 0) {
         appendContentRow(container, '4K Ultra HD & Dolby Master Collection', fourK);
+      }
+    } catch (e) {}
+
+    // 12. Streaming Studio Hubs (Disney+, Prime, Apple TV+, HBO Max)
+    try {
+      const disney = await api.getStreamingPlatformCatalog('disney');
+      if (disney && disney.length > 0) {
+        appendContentRow(container, 'Disney+ & Pixar Animated Classics', disney);
+      }
+    } catch (e) {}
+
+    try {
+      const prime = await api.getStreamingPlatformCatalog('prime');
+      if (prime && prime.length > 0) {
+        appendContentRow(container, 'Prime Video Exclusive Blockbusters', prime);
+      }
+    } catch (e) {}
+
+    try {
+      const apple = await api.getStreamingPlatformCatalog('apple');
+      if (apple && apple.length > 0) {
+        appendContentRow(container, 'Apple TV+ Award-Winning Cinema', apple);
       }
     } catch (e) {}
 
@@ -899,15 +935,17 @@ function createCardMarkup(item) {
   const year = item.display_year || (item.release_date || item.first_air_date || '').substring(0, 4) || '2024';
   const rating = item.vote_average ? `${Math.round(item.vote_average * 10)}%` : '95%';
   const poster = item.poster_src || (item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : api.getFallbackPoster(title));
-  const isUpcoming = item.is_upcoming || parseInt(year) > 2024;
+  const isUpcoming = Boolean(item.is_upcoming || item.is_2026 || item.is_2027 || item.is_2028 || parseInt(year) >= 2025 || /\(202[5-9]\)/.test(title));
+  const isFree = Boolean(item.is_free_stream || api.getFreeStreamForMedia(item));
+  const qualityTag = isFree ? 'FREE 1080p' : (item.quality_badge || '1080p');
 
   return `
     <div class="media-card" data-id="${item.id}" data-type="${item.media_type || 'movie'}">
       <div class="card-poster-wrap">
         <img class="card-poster-img" src="${poster}" alt="${title}" loading="lazy" decoding="async">
-        <div class="card-spec-tag">${isUpcoming ? 'Teaser' : '1080p'}</div>
+        <div class="card-spec-tag">${qualityTag}</div>
         <div class="card-hover-actions">
-          <button class="card-action-btn btn-card-quick-play" title="${isUpcoming ? 'Watch Trailer' : 'Play'}"><i class="fas fa-play"></i></button>
+          <button class="card-action-btn btn-card-quick-play" title="${isFree ? 'Stream Free' : (isUpcoming ? 'Watch Trailer' : 'Watch Now')}"><i class="fas fa-play"></i></button>
           <button class="card-action-btn btn-card-quick-list" title="Add to List"><i class="fas fa-plus"></i></button>
         </div>
       </div>
@@ -923,7 +961,7 @@ function createCardMarkup(item) {
 }
 
 // ==========================================================================
-// Hero Spotlight
+// Hero Spotlight & Controls
 // ==========================================================================
 function renderSpotlight() {
   if (state.spotlightItems.length === 0) return;
@@ -936,19 +974,42 @@ function renderSpotlight() {
   const matchEl = document.getElementById('spotlight-match');
   const yearEl = document.getElementById('spotlight-year');
 
-  if (titleEl) titleEl.textContent = item.display_title || item.title || item.name;
+  const title = item.display_title || item.title || item.name;
+  const year = item.display_year || (item.release_date || item.first_air_date || '').substring(0, 4) || '2024';
+  const isUpcoming = Boolean(item.is_upcoming || item.is_2026 || item.is_2027 || item.is_2028 || parseInt(year) >= 2025 || /\(202[5-9]\)/.test(title));
+
+  if (titleEl) titleEl.textContent = title;
   if (descEl) descEl.textContent = item.overview || 'Streaming now in full cinematic quality on WatchX.';
-  if (matchEl) matchEl.textContent = `${item.rating_percentage || 98}% Match`;
-  if (yearEl) yearEl.textContent = item.display_year || '2024';
+  if (matchEl) matchEl.textContent = isUpcoming ? `Premiere ${year}` : `${item.rating_percentage || 98}% Match`;
+  if (yearEl) yearEl.textContent = year;
 
   if (bgEl && item.backdrop_path) {
     bgEl.src = `https://image.tmdb.org/t/p/original${item.backdrop_path}`;
   }
 
+  // Update Hero Carousel Progress Dots
+  const dotsContainer = document.getElementById('hero-progress-dots');
+  if (dotsContainer && state.spotlightItems.length > 0) {
+    dotsContainer.innerHTML = state.spotlightItems.map((_, idx) => `
+      <button class="hero-dot ${idx === state.currentSpotlightIndex ? 'active' : ''}" data-index="${idx}" aria-label="Slide ${idx + 1}"></button>
+    `).join('');
+
+    dotsContainer.querySelectorAll('.hero-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        soundFX.playClick();
+        const idx = parseInt(dot.getAttribute('data-index'));
+        if (!isNaN(idx)) {
+          state.currentSpotlightIndex = idx;
+          renderSpotlight();
+          resetSpotlightTimer();
+        }
+      });
+    });
+  }
+
   // Spotlight Buttons
   const playBtn = document.getElementById('spotlight-play');
   if (playBtn) {
-    const isUpcoming = item.is_upcoming || parseInt(item.display_year || (item.release_date || '').substring(0, 4) || '2024') > 2024;
     playBtn.innerHTML = isUpcoming ? '<i class="fas fa-play"></i> Watch Official Trailer' : '<i class="fas fa-play"></i> Watch Now';
     playBtn.onclick = () => {
       soundFX.playTaDum();
@@ -974,14 +1035,63 @@ function renderSpotlight() {
   }
 }
 
+function setupHeroCarouselControls() {
+  const prevBtn = document.getElementById('hero-prev-btn');
+  const nextBtn = document.getElementById('hero-next-btn');
+  const pauseBtn = document.getElementById('hero-pause-btn');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      soundFX.playClick();
+      if (state.spotlightItems.length > 0) {
+        state.currentSpotlightIndex = (state.currentSpotlightIndex - 1 + state.spotlightItems.length) % state.spotlightItems.length;
+        renderSpotlight();
+        resetSpotlightTimer();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      soundFX.playClick();
+      if (state.spotlightItems.length > 0) {
+        state.currentSpotlightIndex = (state.currentSpotlightIndex + 1) % state.spotlightItems.length;
+        renderSpotlight();
+        resetSpotlightTimer();
+      }
+    });
+  }
+
+  if (pauseBtn) {
+    pauseBtn.addEventListener('click', () => {
+      soundFX.playClick();
+      state.spotlightPaused = !state.spotlightPaused;
+      pauseBtn.innerHTML = state.spotlightPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+      pauseBtn.title = state.spotlightPaused ? 'Resume Rotation' : 'Pause Rotation';
+      if (state.spotlightPaused) {
+        if (state.spotlightTimer) clearInterval(state.spotlightTimer);
+      } else {
+        startSpotlightRotation();
+      }
+    });
+  }
+}
+
+function resetSpotlightTimer() {
+  if (!state.spotlightPaused) {
+    startSpotlightRotation();
+  }
+}
+
 function startSpotlightRotation() {
   if (state.spotlightTimer) clearInterval(state.spotlightTimer);
+  if (state.spotlightPaused) return;
   state.spotlightTimer = setInterval(() => {
     if (state.spotlightItems.length > 1 && !player.isOpen()) {
       state.currentSpotlightIndex = (state.currentSpotlightIndex + 1) % state.spotlightItems.length;
       renderSpotlight();
     }
-  }, 12000);
+  }, 10000);
 }
 
 // ==========================================================================
@@ -1032,6 +1142,26 @@ async function loadCatalog(append = false) {
       card.innerHTML = createCardMarkup(item);
       const cardEl = card.firstElementChild;
       cardEl.addEventListener('click', () => openDetailModal(item));
+      const playBtn = cardEl.querySelector('.btn-card-quick-play');
+      if (playBtn) {
+        playBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          soundFX.playTaDum();
+          player.play(item);
+        });
+      }
+      const listBtn = cardEl.querySelector('.btn-card-quick-list');
+      if (listBtn) {
+        listBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          soundFX.playClick();
+          const profile = authManager.getActiveProfile();
+          if (profile) {
+            await dbClient.addToWatchlist(profile.id, item);
+            listBtn.innerHTML = '<i class="fas fa-check"></i>';
+          }
+        });
+      }
       fragment.appendChild(cardEl);
     });
     grid.appendChild(fragment);
@@ -1232,11 +1362,46 @@ async function loadAnimeView() {
   }
 }
 
+// Helper to attach click and quick-action handlers to grid cards
+function attachGridCardListeners(container, itemsArray, startIndex = 0) {
+  const cards = container.querySelectorAll('.media-card');
+  for (let i = startIndex; i < cards.length; i++) {
+    const card = cards[i];
+    const item = itemsArray[i];
+    if (!item) continue;
+
+    card.addEventListener('click', () => openDetailModal(item));
+
+    const playBtn = card.querySelector('.btn-card-quick-play');
+    if (playBtn) {
+      playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundFX.playTaDum();
+        player.play(item);
+      });
+    }
+
+    const listBtn = card.querySelector('.btn-card-quick-list');
+    if (listBtn) {
+      listBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        soundFX.playClick();
+        const profile = authManager.getActiveProfile();
+        if (profile) {
+          await dbClient.addToWatchlist(profile.id, item);
+          listBtn.innerHTML = '<i class="fas fa-check"></i>';
+        }
+      });
+    }
+  }
+}
+
 // ==========================================================================
-// Dedicated 2026 Movie Collection View
+// Dedicated 2026 Movie Collection View (10,000+ Titles in 1080p FHD)
 // ==========================================================================
 let current2026Sort = 'popularity.desc';
 let current2026Page = 1;
+let loaded2026Items = [];
 
 async function load2026View() {
   const gridEl = document.getElementById('year2026-grid');
@@ -1246,16 +1411,21 @@ async function load2026View() {
 
   const res = await api.get2026Collection({ page: 1, sort: current2026Sort });
   current2026Page = 1;
+  loaded2026Items = [...res.items];
 
-  gridEl.innerHTML = res.items.map(item => createCardMarkup({
+  const counterEl = document.getElementById('year2026-counter');
+  if (counterEl) {
+    const totalCount = res.totalResults || 20001;
+    counterEl.textContent = `${totalCount.toLocaleString()} 2026 Theatrical & Studio Releases in 1080p FHD (Page 1 of ${res.totalPages || 500})`;
+  }
+
+  gridEl.innerHTML = loaded2026Items.map(item => createCardMarkup({
     ...item,
     is_upcoming: true,
-    quality_badge: '2026 Premiere'
+    quality_badge: '1080p'
   })).join('');
 
-  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
-    card.addEventListener('click', () => openDetailModal(res.items[idx]));
-  });
+  attachGridCardListeners(gridEl, loaded2026Items, 0);
 
   document.querySelectorAll('[data-2026-sort]').forEach(chip => {
     chip.classList.toggle('active', chip.dataset['2026Sort'] === current2026Sort);
@@ -1267,43 +1437,143 @@ async function load2026View() {
 
   const loadMoreBtn = document.getElementById('year2026-loadmore');
   if (loadMoreBtn) {
+    loadMoreBtn.style.display = current2026Page < (res.totalPages || 500) ? 'inline-flex' : 'none';
+    loadMoreBtn.disabled = false;
+    loadMoreBtn.textContent = 'Load More 2026 Titles (1080p)';
     loadMoreBtn.onclick = async () => {
       current2026Page++;
       loadMoreBtn.disabled = true;
-      loadMoreBtn.textContent = 'Loading...';
+      loadMoreBtn.textContent = 'Loading 1080p Titles...';
       const more = await api.get2026Collection({ page: current2026Page, sort: current2026Sort });
-      gridEl.insertAdjacentHTML('beforeend', more.items.map(item => createCardMarkup({
+      const startIndex = loaded2026Items.length;
+      loaded2026Items.push(...more.items);
+
+      const newHtml = more.items.map(item => createCardMarkup({
         ...item,
         is_upcoming: true,
-        quality_badge: '2026 Premiere'
-      })).join(''));
-      gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
-        card.onclick = () => openDetailModal(res.items[idx] || more.items[idx]);
-      });
+        quality_badge: '1080p'
+      })).join('');
+      gridEl.insertAdjacentHTML('beforeend', newHtml);
+
+      attachGridCardListeners(gridEl, loaded2026Items, startIndex);
+
+      if (counterEl) {
+        const totalCount = res.totalResults || 20001;
+        counterEl.textContent = `${totalCount.toLocaleString()} 2026 Theatrical & Studio Releases in 1080p FHD (Page ${current2026Page} of ${res.totalPages || 500})`;
+      }
+
       loadMoreBtn.disabled = false;
-      loadMoreBtn.textContent = 'Load More 2026 Titles';
+      loadMoreBtn.textContent = 'Load More 2026 Titles (1080p)';
+      if (current2026Page >= (res.totalPages || 500)) {
+        loadMoreBtn.style.display = 'none';
+      }
     };
   }
 }
 
 // ==========================================================================
-// Dedicated 2027 Upcoming Movie Database View
+// Dedicated 2027 Upcoming Movie Database View (1,300+ Titles in 1080p FHD)
 // ==========================================================================
+let current2027Sort = 'popularity.desc';
+let current2027Page = 1;
+let loaded2027Items = [];
+
 async function load2027View() {
   const gridEl = document.getElementById('year2027-grid');
   if (!gridEl) return;
 
   gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
 
-  const res = await api.get2027Collection({ page: 1 });
-  gridEl.innerHTML = res.items.map(item => createCardMarkup({
+  const res = await api.get2027Collection({ page: 1, sort: current2027Sort });
+  current2027Page = 1;
+  loaded2027Items = [...res.items];
+
+  const counterEl = document.getElementById('year2027-counter');
+  if (counterEl) {
+    const totalCount = res.totalResults || 1338;
+    counterEl.textContent = `${totalCount.toLocaleString()} 2027 Announced Blockbusters in 1080p FHD (Page 1 of ${res.totalPages || 67})`;
+  }
+
+  gridEl.innerHTML = loaded2027Items.map(item => createCardMarkup({
     ...item,
     is_upcoming: true,
-    quality_badge: '2027 Tentpole'
+    quality_badge: '1080p'
   })).join('');
 
-  gridEl.querySelectorAll('.media-card').forEach((card, idx) => {
-    card.addEventListener('click', () => openDetailModal(res.items[idx]));
+  attachGridCardListeners(gridEl, loaded2027Items, 0);
+
+  document.querySelectorAll('[data-2027-sort]').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset['2027Sort'] === current2027Sort);
+    chip.onclick = () => {
+      current2027Sort = chip.dataset['2027Sort'];
+      load2027View();
+    };
+  });
+
+  const loadMoreBtn = document.getElementById('year2027-loadmore');
+  if (loadMoreBtn) {
+    loadMoreBtn.style.display = current2027Page < (res.totalPages || 67) ? 'inline-flex' : 'none';
+    loadMoreBtn.disabled = false;
+    loadMoreBtn.textContent = 'Load More 2027 Titles (1080p)';
+    loadMoreBtn.onclick = async () => {
+      current2027Page++;
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Loading 1080p Titles...';
+      const more = await api.get2027Collection({ page: current2027Page, sort: current2027Sort });
+      const startIndex = loaded2027Items.length;
+      loaded2027Items.push(...more.items);
+
+      const newHtml = more.items.map(item => createCardMarkup({
+        ...item,
+        is_upcoming: true,
+        quality_badge: '1080p'
+      })).join('');
+      gridEl.insertAdjacentHTML('beforeend', newHtml);
+
+      attachGridCardListeners(gridEl, loaded2027Items, startIndex);
+
+      if (counterEl) {
+        const totalCount = res.totalResults || 1338;
+        counterEl.textContent = `${totalCount.toLocaleString()} 2027 Announced Blockbusters in 1080p FHD (Page ${current2027Page} of ${res.totalPages || 67})`;
+      }
+
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = 'Load More 2027 Titles (1080p)';
+      if (current2027Page >= (res.totalPages || 67)) {
+        loadMoreBtn.style.display = 'none';
+      }
+    };
+  }
+}
+
+// ==========================================================================
+// 100% Free to Watch Cinema View (Internet Archive, Public Domain, Official Distributors)
+// ==========================================================================
+let currentFreeGenre = 'all';
+
+async function loadFreeToWatchView() {
+  const gridEl = document.getElementById('freetowatch-grid');
+  if (!gridEl) return;
+
+  gridEl.innerHTML = '<div class="player-spinner" style="grid-column: 1 / -1; height: 160px;"><div class="spinner-icon"></div></div>';
+
+  const res = await api.getFreeToWatchCollection({ genre: currentFreeGenre });
+
+  const counterEl = document.getElementById('freetowatch-counter');
+  if (counterEl) {
+    counterEl.textContent = `${res.totalResults} Verified Legal Full Movies in 1080p · Zero Ads · Zero Subscriptions`;
+  }
+
+  gridEl.innerHTML = res.items.map(item => createCardMarkup(item)).join('');
+
+  attachGridCardListeners(gridEl, res.items, 0);
+
+  document.querySelectorAll('[data-free-genre]').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.freeGenre === currentFreeGenre);
+    chip.onclick = () => {
+      currentFreeGenre = chip.dataset.freeGenre;
+      loadFreeToWatchView();
+    };
   });
 }
 
@@ -1472,6 +1742,26 @@ async function performSearch(query) {
       card.innerHTML = createCardMarkup(item);
       const cardEl = card.firstElementChild;
       cardEl.addEventListener('click', () => openDetailModal(item));
+      const playBtn = cardEl.querySelector('.btn-card-quick-play');
+      if (playBtn) {
+        playBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          soundFX.playTaDum();
+          player.play(item);
+        });
+      }
+      const listBtn = cardEl.querySelector('.btn-card-quick-list');
+      if (listBtn) {
+        listBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          soundFX.playClick();
+          const profile = authManager.getActiveProfile();
+          if (profile) {
+            await dbClient.addToWatchlist(profile.id, item);
+            listBtn.innerHTML = '<i class="fas fa-check"></i>';
+          }
+        });
+      }
       grid.appendChild(cardEl);
     });
   } catch (err) {
@@ -1619,43 +1909,48 @@ async function openDetailModal(media) {
 
   const title = media.display_title || media.title || media.name || 'Title';
   const year = media.display_year || (media.release_date || media.first_air_date || '').substring(0, 4) || '2024';
-  const isUpcoming = media.is_upcoming || parseInt(year) > 2024;
+  const isUpcoming = Boolean(media.is_upcoming || media.is_2026 || media.is_2027 || media.is_2028 || parseInt(year) >= 2025 || /\(202[5-9]\)/.test(title));
 
   if (titleEl) titleEl.textContent = title;
   if (yearEl) yearEl.textContent = year;
-  if (matchEl) matchEl.textContent = isUpcoming ? `Coming Soon ${year}` : `${media.rating_percentage || 96}% Match`;
+  if (matchEl) matchEl.textContent = isUpcoming ? `Premiere ${year}` : `${media.rating_percentage || 96}% Match`;
   if (overviewEl) overviewEl.textContent = media.overview || 'Streaming in pristine 1080p Full HD on WatchX.';
   if (bgEl && media.backdrop_path) {
     bgEl.src = `https://image.tmdb.org/t/p/original${media.backdrop_path}`;
   }
 
-  // Play button handler - automatically targets 1080p Cinema stream or Official 4K Trailer
+  // Availability Banner & Play Action: 100% Legal & Ad-Free
+  const avail = api.getStreamAvailability(media);
+  const availBanner = document.getElementById('detail-availability-banner');
+  if (availBanner) {
+    if (avail.isFree) {
+      availBanner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #141414; border: 1px solid #333; border-radius: 6px; font-size: 13px; color: #fff;">
+          <i class="fas fa-check-circle" style="color: #fff;"></i>
+          <span><strong>100% Free &amp; Legal:</strong> Stream full-length film from ${avail.source} (${avail.license}) with zero ads.</span>
+        </div>
+      `;
+    } else {
+      availBanner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #141414; border: 1px solid #333; border-radius: 6px; font-size: 13px; color: #aaa;">
+          <i class="fas fa-film" style="color: #fff;"></i>
+          <span><strong>Theatrical / Studio Release:</strong> Free streaming is not yet legally available. Enjoy the official 4K studio trailer below.</span>
+        </div>
+      `;
+    }
+  }
+
+  // Play button handler - automatically targets 1080p Free Legal stream or Official 4K Trailer
   if (playBtn) {
-    if (isUpcoming) {
-      playBtn.innerHTML = '<i class="fas fa-play"></i> Watch Official 4K Trailer';
-      playBtn.onclick = async () => {
+    if (avail.isFree) {
+      playBtn.innerHTML = '<i class="fas fa-play"></i> Stream Free in 1080p';
+      playBtn.onclick = () => {
         modal.classList.remove('active');
         soundFX.playTaDum();
-        let trailerKey = media.trailer_key || state.activeDetailFullData?.videos?.results?.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'))?.key;
-        if (!trailerKey) {
-          try {
-            const mType = media.media_type || (media.name ? 'tv' : 'movie');
-            const full = await api.getMediaDetails(mType, media.id);
-            const videos = full?.videos?.results || [];
-            const trailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
-              || videos.find(v => v.site === 'YouTube' && v.type === 'Trailer')
-              || videos.find(v => v.site === 'YouTube' && (v.type === 'Teaser' || v.type === 'Clip'));
-            if (trailer?.key) trailerKey = trailer.key;
-          } catch (e) {}
-        }
-        if (trailerKey) {
-          player.playTrailer(trailerKey, title, `Official 4K Cinematic Trailer · In Theaters ${year}`);
-        } else {
-          player.play(media);
-        }
+        player.play(media);
       };
     } else {
-      playBtn.innerHTML = '<i class="fas fa-play"></i> Watch in 1080p Cinema';
+      playBtn.innerHTML = '<i class="fas fa-play"></i> Watch Official 4K Trailer';
       playBtn.onclick = () => {
         modal.classList.remove('active');
         soundFX.playTaDum();

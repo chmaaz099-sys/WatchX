@@ -4,7 +4,7 @@
  * 4-Digit Secure Profile PINs, and Avatar Customization.
  */
 
-import { dbClient, DEFAULT_AVATARS } from './supabase-client.js?v=28';
+import { dbClient, DEFAULT_AVATARS } from './supabase-client.js?v=31';
 
 class AuthProfileManager {
   constructor() {

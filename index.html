@@ -8,8 +8,8 @@
   <meta name="description" content="WatchX - Stream 10,000+ movies, TV series, anime, and documentaries in cinematic 1080p and 4K Ultra HD. Pure black monochrome luxury.">
   <meta name="theme-color" content="#000000">
 
-  <!-- Strict Content Security Policy: Authorizes cinema video streams & YouTube NoCookie while preventing ad injections -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-src 'self' https://vidsrc.to https://*.vidsrc.to https://vidsrc.xyz https://*.vidsrc.xyz https://vidsrc.sh https://*.vidsrc.sh https://vidsrc.cc https://*.vidsrc.cc https://player.autoembed.cc https://*.autoembed.cc https://www.2embed.cc https://*.2embed.cc https://vidlink.pro https://*.vidlink.pro https://vidprime.top https://*.vidprime.top https://www.youtube-nocookie.com https://*.youtube-nocookie.com https://www.youtube.com https://*.youtube.com blob: data:; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; object-src 'self' data: blob: https:; connect-src 'self' https: wss:;">
+  <!-- Strict Content Security Policy: Authorizes Internet Archive, Public Domain streams & YouTube NoCookie while preventing ad injections -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-src 'self' https://archive.org https://*.archive.org https://www.youtube-nocookie.com https://*.youtube-nocookie.com https://www.youtube.com https://*.youtube.com https://vidlink.pro https://*.vidlink.pro blob: data:; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; object-src 'self' data: blob: https:; connect-src 'self' https: wss:;">
 
   <!-- Preconnect & DNS-Prefetch for Speed -->
   <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
@@ -29,7 +29,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Main Pure Black Monochrome Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=28">
+  <link rel="stylesheet" href="css/style.css?v=31">
 </head>
 <body>
 
@@ -38,13 +38,21 @@
        ========================================================================== -->
   <header class="header" id="main-header">
     <div class="header-left">
-      <a href="#" class="logo-brand" id="brand-logo">
-        WATCHX <span class="logo-badge">CINEMA</span>
+      <a href="#" class="logo-brand" id="brand-logo" title="WatchX Cinema Home">
+        <svg class="brand-logo-mark" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="6" fill="#141414" stroke="#333333" stroke-width="1.5"/>
+          <path d="M7 8L14 14L7 20" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M21 8L14 14L21 20" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="14" cy="14" r="2" fill="#FFFFFF"/>
+        </svg>
+        <span class="logo-text">WATCH<span class="logo-x">X</span></span>
+        <span class="logo-badge">CINEMA</span>
         <span class="kids-badge" id="header-kids-badge" style="display: none; background: #ffffff; color: #000000; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 1px; margin-left: 6px;">KIDS</span>
       </a>
       <ul class="nav-links">
         <li><a href="#" class="nav-link active" data-tab="home">Home</a></li>
         <li><a href="#" class="nav-link" data-tab="movies">Movies</a></li>
+        <li><a href="#" class="nav-link" data-tab="freetowatch"><i class="fas fa-play-circle" style="margin-right: 4px; font-size: 11px;"></i> Free to Watch</a></li>
         <li><a href="#" class="nav-link" data-tab="tv">TV Shows</a></li>
         <li><a href="#" class="nav-link" data-tab="anime">Anime</a></li>
         <li><a href="#" class="nav-link" data-tab="year2026">2026 Slate</a></li>
@@ -174,6 +182,20 @@
           </button>
         </div>
       </div>
+
+      <!-- Hero Carousel Controls & Indicators -->
+      <div class="hero-carousel-controls">
+        <button class="hero-nav-arrow" id="hero-prev-btn" title="Previous Title (Left Arrow)" aria-label="Previous">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="hero-progress-dots" id="hero-progress-dots"></div>
+        <button class="hero-nav-arrow" id="hero-next-btn" title="Next Title (Right Arrow)" aria-label="Next">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <button class="hero-pause-toggle" id="hero-pause-btn" title="Pause / Resume Rotation" aria-label="Pause Autoplay">
+          <i class="fas fa-pause"></i>
+        </button>
+      </div>
     </section>
 
     <!-- Content Carousels Container -->
@@ -227,6 +249,8 @@
           <label><i class="fas fa-calendar"></i> Year</label>
           <select id="catalog-year-filter">
             <option value="">All Years</option>
+            <option value="2027">2027 (1,300+ 1080p Titles)</option>
+            <option value="2026">2026 (20,000+ 1080p Titles)</option>
             <option value="2025">2025</option>
             <option value="2024">2024</option>
             <option value="2023">2023</option>
@@ -327,9 +351,10 @@
           <button class="filter-chip active" data-upcoming-cat="all">All Upcoming</button>
           <button class="filter-chip" data-upcoming-cat="week">This Week</button>
           <button class="filter-chip" data-upcoming-cat="month">This Month</button>
-          <button class="filter-chip" data-upcoming-cat="next_month">Next Month</button>
           <button class="filter-chip" data-upcoming-cat="later_this_year">Later This Year</button>
-          <button class="filter-chip" data-upcoming-cat="next_year">Next Year</button>
+          <button class="filter-chip" data-upcoming-cat="2026">2026 Theatrical Slate</button>
+          <button class="filter-chip" data-upcoming-cat="2027">2027 Previews</button>
+          <button class="filter-chip" data-upcoming-cat="2028">2028 Future Outlook</button>
           <button class="filter-chip" data-upcoming-cat="tv">Upcoming Series</button>
         </div>
       </div>
@@ -441,6 +466,42 @@
   </section>
 
   <!-- ==========================================================================
+       100% Free to Watch Cinema Section (Internet Archive & Public Domain & Official Distributors)
+       Zero Ads · Zero Subscriptions · Verified Legal Full Movies in 1080p
+       ========================================================================== -->
+  <section class="catalog-view" id="freetowatch-view" style="display: none;">
+    <div class="comingsoon-hero-spotlight">
+      <div class="comingsoon-hero-backdrop-container">
+        <img class="comingsoon-hero-backdrop" src="https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s520ffq.jpg" alt="Free to Watch Banner">
+        <div class="spotlight-vignette"></div>
+      </div>
+      <div class="comingsoon-hero-content">
+        <div class="spotlight-badge"><i class="fas fa-shield-check"></i> 100% FREE &amp; LEGAL STREAMING</div>
+        <h1 class="comingsoon-hero-title">Free to Watch in 1080p</h1>
+        <p class="spotlight-desc">Stream full-length cinema masterworks legally and completely free. Sourced directly from Internet Archive, Public Domain restorations, and official studio distributors with zero advertisements.</p>
+      </div>
+    </div>
+
+    <div class="catalog-header" style="margin-top: 36px;">
+      <div class="catalog-title-group">
+        <h2>Free Movie Collection</h2>
+        <span class="catalog-counter" id="freetowatch-counter">Verified Legal Full Movies · Ad-Free</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item chips-scroll-container">
+          <button class="filter-chip active" data-free-genre="all">All Genres</button>
+          <button class="filter-chip" data-free-genre="horror">Horror &amp; Thriller</button>
+          <button class="filter-chip" data-free-genre="scifi">Sci-Fi &amp; Fantasy</button>
+          <button class="filter-chip" data-free-genre="noir">Film Noir &amp; Mystery</button>
+          <button class="filter-chip" data-free-genre="comedy">Comedy &amp; Classics</button>
+          <button class="filter-chip" data-free-genre="animation">Animation &amp; Open Movies</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="freetowatch-grid"></div>
+  </section>
+
+  <!-- ==========================================================================
        Complete 2026 Movie Collection
        ========================================================================== -->
   <section class="catalog-view" id="year2026-view" style="display: none;">
@@ -494,10 +555,20 @@
     <div class="catalog-header" style="margin-top: 36px;">
       <div class="catalog-title-group">
         <h2>2027 Upcoming Database</h2>
-        <span class="catalog-counter">Announced projects and confirmed release dates</span>
+        <span class="catalog-counter" id="year2027-counter">1,300+ 2027 Announced Blockbusters in 1080p FHD</span>
+      </div>
+      <div class="filter-toolbar">
+        <div class="filter-item chips-scroll-container">
+          <button class="filter-chip active" data-2027-sort="popularity.desc">Most Anticipated</button>
+          <button class="filter-chip" data-2027-sort="primary_release_date.asc">Release Date (Earliest)</button>
+          <button class="filter-chip" data-2027-sort="vote_average.desc">Highest Rated</button>
+        </div>
       </div>
     </div>
     <div class="media-grid" id="year2027-grid"></div>
+    <div class="pagination-footer">
+      <button class="btn-secondary-dark" id="year2027-loadmore">Load More 2027 Titles</button>
+    </div>
   </section>
 
   <!-- ==========================================================================
@@ -512,8 +583,13 @@
       <div class="filter-toolbar">
         <div class="filter-item chips-scroll-container">
           <button class="filter-chip active" data-collection="netflix">Netflix Originals</button>
+          <button class="filter-chip" data-collection="disney">Disney+ Showcase</button>
+          <button class="filter-chip" data-collection="prime">Prime Video Hits</button>
+          <button class="filter-chip" data-collection="max">HBO Max Previews</button>
+          <button class="filter-chip" data-collection="apple">Apple TV+ Cinema</button>
           <button class="filter-chip" data-collection="year2026">Best of 2026</button>
           <button class="filter-chip" data-collection="year2027">2027 Blockbusters</button>
+          <button class="filter-chip" data-collection="year2028">2028 Future Outlook</button>
           <button class="filter-chip" data-collection="psychological">Psychological Thrillers</button>
           <button class="filter-chip" data-collection="scifi">Top Sci-Fi</button>
           <button class="filter-chip" data-collection="anime">Anime Masterpieces</button>
@@ -1136,6 +1212,7 @@
               <span class="meta-pill">1080p FHD</span>
               <span class="meta-pill">5.1 Audio</span>
             </div>
+            <div id="detail-availability-banner" style="margin: 12px 0 16px 0;"></div>
             <p class="detail-overview" id="detail-overview"></p>
           </div>
           <div class="detail-side-meta">
@@ -1253,10 +1330,10 @@
           <i class="fas fa-gauge"></i> <span id="player-speed-label">1.0x</span>
         </button>
 
-        <!-- Silent Stream Switcher -->
-        <button class="player-ep-btn" id="player-switch-stream-btn" title="Switch Stream Server" style="display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fas fa-rotate"></i> <span id="player-stream-label">Server 1</span>
-        </button>
+        <!-- Legal Source Verification Badge -->
+        <div class="player-source-badge" id="player-source-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; font-size: 12px; font-weight: 700; color: #fff;">
+          <i class="fas fa-shield-check" style="color: #fff;"></i> <span id="player-source-label">100% Free &amp; Legal</span>
+        </div>
 
         <button class="player-icon-btn" id="player-pip-btn" title="Picture in Picture">
           <i class="fas fa-clone"></i>
@@ -1277,6 +1354,7 @@
         <span>Buffering WatchX stream...</span>
       </div>
       <div id="player-mount-point" style="width: 100%; height: 100%; position: relative;">
+        <video id="player-native-video" class="player-native-video" playsinline controls style="display: none; width: 100%; height: 100%; object-fit: contain; background: #000; position: absolute; inset: 0; z-index: 2;"></video>
         <iframe id="player-iframe" class="player-iframe" loading="eager" referrerpolicy="origin" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
       </div>
 
@@ -1399,6 +1477,6 @@
   </footer>
 
   <!-- Core App Controller -->
-  <script type="module" src="js/app.js?v=28"></script>
+  <script type="module" src="js/app.js?v=31"></script>
 </body>
 </html>
