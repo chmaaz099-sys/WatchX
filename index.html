@@ -28,6 +28,9 @@
   <!-- Supabase JS Client Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- HLS.js Adaptive Video Streaming Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+
   <!-- Main Pure Black Monochrome Stylesheet -->
   <link rel="stylesheet" href="css/style.css?v=31">
 </head>
@@ -1295,11 +1298,12 @@
   </div>
 
   <!-- ==========================================================================
-       Ultra-Clean Cinema Video Player
-       NO PROVIDER BADGES, NO LATENCY PILLS
+       Premium Netflix-Style Cinema Video Player
+       Native HTML5 + HLS.js Adaptive Streaming · Subtitles · Multi-Audio · Skip Intro · TV Episodes
        ========================================================================== -->
   <div class="player-modal" id="player-modal">
-    <div class="player-header">
+    <!-- Top Header Bar -->
+    <div class="player-header" id="player-header">
       <div class="player-header-left">
         <button class="player-back-btn" id="player-close-btn" title="Back to WatchX (Esc)">
           <i class="fas fa-arrow-left"></i> <span>Back</span>
@@ -1311,28 +1315,63 @@
       </div>
 
       <div class="player-header-right">
-        <!-- Quick Skip Controls -->
-        <button class="player-ep-btn" id="player-skip-back-10" title="Rewind 10 Seconds (Left Arrow)">
-          <i class="fas fa-rotate-left"></i> 10s
+        <!-- TV Episodes Drawer Toggle Button -->
+        <button class="player-ep-btn" id="player-episodes-drawer-btn" style="display: none;" title="Episodes List">
+          <i class="fas fa-list-ul"></i> Episodes
         </button>
-        <button class="player-ep-btn" id="player-skip-forward-10" title="Forward 10 Seconds (Right Arrow)">
-          <i class="fas fa-rotate-right"></i> 10s
-        </button>
-
-        <!-- TV Episode Controls -->
-        <div class="player-ep-controls" id="player-episode-controls" style="display: none;">
-          <button class="player-ep-btn" id="player-prev-ep" title="Previous Episode (P)"><i class="fas fa-step-backward"></i> Prev</button>
-          <button class="player-ep-btn" id="player-next-ep" title="Next Episode (N)">Next <i class="fas fa-step-forward"></i></button>
-        </div>
 
         <!-- Speed Selector Button -->
-        <button class="player-ep-btn" id="player-speed-btn" title="Playback Speed">
-          <i class="fas fa-gauge"></i> <span id="player-speed-label">1.0x</span>
-        </button>
+        <div class="player-menu-container">
+          <button class="player-ep-btn" id="player-speed-btn" title="Playback Speed">
+            <i class="fas fa-gauge"></i> <span id="player-speed-label">1.0x</span>
+          </button>
+          <div class="player-popup-menu" id="player-speed-menu">
+            <div class="player-menu-title">Playback Speed</div>
+            <button class="player-menu-item" data-speed="0.5">0.5x</button>
+            <button class="player-menu-item" data-speed="0.75">0.75x</button>
+            <button class="player-menu-item active" data-speed="1.0">1.0x (Normal)</button>
+            <button class="player-menu-item" data-speed="1.25">1.25x</button>
+            <button class="player-menu-item" data-speed="1.5">1.5x</button>
+            <button class="player-menu-item" data-speed="2.0">2.0x</button>
+          </div>
+        </div>
 
-        <!-- Legal Source Verification Badge -->
-        <div class="player-source-badge" id="player-source-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; font-size: 12px; font-weight: 700; color: #fff;">
-          <i class="fas fa-shield-check" style="color: #fff;"></i> <span id="player-source-label">100% Free &amp; Legal</span>
+        <!-- Adaptive Quality Selector Button -->
+        <div class="player-menu-container">
+          <button class="player-ep-btn" id="player-quality-btn" title="Video Quality">
+            <i class="fas fa-sliders"></i> <span id="player-quality-label">Auto</span>
+          </button>
+          <div class="player-popup-menu" id="player-quality-menu">
+            <div class="player-menu-title">Video Quality</div>
+            <button class="player-menu-item active" data-quality="auto">Auto (Adaptive)</button>
+            <button class="player-menu-item" data-quality="1080">1080p FHD</button>
+            <button class="player-menu-item" data-quality="720">720p HD</button>
+            <button class="player-menu-item" data-quality="480">480p SD</button>
+            <button class="player-menu-item" data-quality="360">360p</button>
+          </div>
+        </div>
+
+        <!-- Audio & Subtitles Selector Button -->
+        <div class="player-menu-container">
+          <button class="player-icon-btn" id="player-subtitles-btn" title="Audio & Subtitles">
+            <i class="fas fa-closed-captioning"></i>
+          </button>
+          <div class="player-popup-menu" id="player-subtitles-menu" style="min-width: 220px;">
+            <div class="player-menu-title">Subtitles</div>
+            <button class="player-menu-item active" data-sub="off"><i class="fas fa-ban"></i> Off</button>
+            <button class="player-menu-item" data-sub="en"><i class="fas fa-check"></i> English [CC]</button>
+            <button class="player-menu-item" data-sub="es">Español</button>
+            <button class="player-menu-item" data-sub="fr">Français</button>
+            <div class="player-menu-divider"></div>
+            <div class="player-menu-title">Audio</div>
+            <button class="player-menu-item active" data-audio="0"><i class="fas fa-volume-high"></i> Original Stereo</button>
+            <button class="player-menu-item" data-audio="1"><i class="fas fa-volume-high"></i> English (Surround 5.1)</button>
+          </div>
+        </div>
+
+        <!-- Source Verification Badge -->
+        <div class="player-source-badge" id="player-source-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #141414; border: 1px solid #333; border-radius: 4px; font-size: 12px; font-weight: 700; color: #fff;">
+          <i class="fas fa-shield-check" style="color: #fff;"></i> <span id="player-source-label">100% Authorized Stream</span>
         </div>
 
         <button class="player-icon-btn" id="player-pip-btn" title="Picture in Picture">
@@ -1348,23 +1387,105 @@
     <!-- Precision Resume Toast -->
     <div class="player-resume-toast" id="player-resume-toast" style="display: none;"></div>
 
+    <!-- Floating "Skip Intro" & "Skip Recap" Buttons (Netflix-Style) -->
+    <div class="player-skip-container" id="player-skip-container">
+      <button class="btn-skip-intro" id="player-skip-intro-btn" style="display: none;">
+        <span>Skip Intro</span> <i class="fas fa-forward-step"></i>
+      </button>
+      <button class="btn-skip-intro" id="player-skip-recap-btn" style="display: none;">
+        <span>Skip Recap</span> <i class="fas fa-forward-step"></i>
+      </button>
+    </div>
+
+    <!-- Video Stage -->
     <div class="player-container" id="player-media-container">
       <div class="player-spinner" id="player-spinner">
         <div class="spinner-icon"></div>
-        <span>Buffering WatchX stream...</span>
+        <span id="player-spinner-text">Buffering authorized stream...</span>
       </div>
+
       <div id="player-mount-point" style="width: 100%; height: 100%; position: relative;">
-        <video id="player-native-video" class="player-native-video" playsinline controls style="display: none; width: 100%; height: 100%; object-fit: contain; background: #000; position: absolute; inset: 0; z-index: 2;"></video>
+        <!-- Native HTML5 Video Element with playsinline -->
+        <video id="player-native-video" class="player-native-video" playsinline preload="auto" style="display: none; width: 100%; height: 100%; object-fit: contain; background: #000; position: absolute; inset: 0; z-index: 2;"></video>
+        <!-- Sandboxed iframe for official studio trailers ONLY -->
         <iframe id="player-iframe" class="player-iframe" loading="eager" referrerpolicy="origin" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
       </div>
 
-      <!-- Interactive Playback Scrubber Bar -->
-      <div class="player-timeline-bar" id="player-timeline-bar">
-        <span class="player-time-label" id="player-time-current">0:00</span>
-        <div class="player-scrubber-track" id="player-scrubber-track">
-          <div class="player-scrubber-progress" id="player-scrubber-progress"></div>
+      <!-- Up Next Episode Auto-Play Countdown Card -->
+      <div class="player-up-next-card" id="player-up-next-card" style="display: none;">
+        <div class="up-next-badge">UP NEXT</div>
+        <div class="up-next-title" id="up-next-title">Next Episode</div>
+        <div class="up-next-timer">Playing in <span id="up-next-seconds">10</span>s</div>
+        <div class="up-next-actions">
+          <button class="btn-primary-white" id="up-next-play-now"><i class="fas fa-play"></i> Play Now</button>
+          <button class="btn-secondary-gray" id="up-next-cancel">Cancel</button>
         </div>
-        <span class="player-time-label" id="player-time-total">2:00:00</span>
+      </div>
+
+      <!-- Netflix-Style Custom Player Controls Bar -->
+      <div class="player-controls-bottom" id="player-controls-bottom">
+        <!-- Interactive Scrubber Bar -->
+        <div class="player-scrubber-wrapper">
+          <div class="player-scrubber-track" id="player-scrubber-track">
+            <div class="player-scrubber-buffered" id="player-scrubber-buffered"></div>
+            <div class="player-scrubber-progress" id="player-scrubber-progress"></div>
+            <div class="player-scrubber-thumb" id="player-scrubber-thumb"></div>
+          </div>
+          <div class="player-scrubber-tooltip" id="player-scrubber-tooltip">00:00</div>
+        </div>
+
+        <div class="player-controls-row">
+          <!-- Left Controls -->
+          <div class="player-controls-left">
+            <button class="player-ctrl-btn" id="player-play-btn" title="Play / Pause (Space)">
+              <i class="fas fa-play" id="player-play-icon"></i>
+            </button>
+            <button class="player-ctrl-btn" id="player-skip-back-10" title="Rewind 10s (Left Arrow)">
+              <i class="fas fa-rotate-left"></i>
+            </button>
+            <button class="player-ctrl-btn" id="player-skip-forward-10" title="Forward 10s (Right Arrow)">
+              <i class="fas fa-rotate-right"></i>
+            </button>
+
+            <!-- Volume Control -->
+            <div class="player-volume-control">
+              <button class="player-ctrl-btn" id="player-volume-btn" title="Mute / Unmute (M)">
+                <i class="fas fa-volume-high" id="player-volume-icon"></i>
+              </button>
+              <input type="range" class="player-volume-slider" id="player-volume-slider" min="0" max="1" step="0.05" value="1">
+            </div>
+
+            <!-- Time Display -->
+            <div class="player-time-display">
+              <span id="player-time-current">0:00</span>
+              <span class="time-sep">/</span>
+              <span id="player-time-total">0:00</span>
+            </div>
+          </div>
+
+          <!-- Right Controls -->
+          <div class="player-controls-right">
+            <!-- TV Show Episode Controls in bottom bar -->
+            <div class="player-ep-controls" id="player-episode-controls" style="display: none;">
+              <button class="player-ep-btn" id="player-prev-ep" title="Previous Episode (P)"><i class="fas fa-step-backward"></i> Prev</button>
+              <button class="player-ep-btn" id="player-next-ep" title="Next Episode (N)">Next <i class="fas fa-step-forward"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-Player TV Episodes Slide-Over Drawer -->
+    <div class="player-episodes-drawer" id="player-episodes-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title-info">
+          <h3>Episodes</h3>
+          <span id="drawer-series-title">Series Name</span>
+        </div>
+        <button class="drawer-close-btn" id="player-drawer-close">&times;</button>
+      </div>
+      <div class="drawer-episodes-list" id="player-drawer-episodes-list">
+        <!-- Populated dynamically with episode cards -->
       </div>
     </div>
   </div>
